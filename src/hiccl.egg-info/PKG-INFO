@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: hiccl
+Version: 0.1.0
+Summary: Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State
+Author: Hiccl Contributors
+License-Expression: MIT
+Project-URL: Documentation, https://github.com/shiunko/hiccl
+Project-URL: Repository, https://github.com/shiunko/hiccl
+Requires-Python: >=3.11
+Requires-Dist: fastapi>=0.110.0
+Requires-Dist: python-multipart>=0.0.6

@@ -27,6 +27,7 @@ src/hiccl/transport/protocol.py
 src/hiccl/transport/sse.py
 src/hiccl/transport/websocket.py
 tests/test_babashka.py
+tests/test_cascade_static.py
 tests/test_component.py
 tests/test_diff.py
 tests/test_hiccup.py

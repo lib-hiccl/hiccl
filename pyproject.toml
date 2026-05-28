@@ -1,6 +1,6 @@
 [project]
 name = "hiccl"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State"
 requires-python = ">=3.11"
 license = "MIT"

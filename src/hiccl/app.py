@@ -21,6 +21,19 @@ if TYPE_CHECKING:
     from hiccl.component import Component
 
 
+class CascadeStaticFiles(StaticFiles):
+    """StaticFiles subclass that searches multiple directories in order."""
+
+    def __init__(self, directories: list[str], **kwargs):
+        import os
+
+        existing_dirs = [d for d in directories if os.path.isdir(d)]
+        if not existing_dirs:
+            raise RuntimeError(f"None of the directories exist: {directories}")
+        super().__init__(directory=existing_dirs[0], **kwargs)
+        self.all_directories = existing_dirs
+
+
 def hiccl_raw_layout(
     request: Request, comp_html: str, menu_html: str, config: HicclConfig
 ) -> str:
@@ -181,7 +194,7 @@ class HicclConfig:
     static_dir: str | None = "static"
     cors_origins: list[str] | None = None
     title: str = "Hiccl"
-    version: str = "0.1.0"
+    version: str = "0.1.1"
     session_max_age: float = 1800.0  # 30 minutes
     session_cleanup_interval: float = 60.0  # 1 minute
     pages: dict[str, type[Component]] | None = None
@@ -269,19 +282,31 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
     if config.static_url and config.static_dir:
         import os
 
-        static_path = config.static_dir
-        if not os.path.isabs(static_path) and not os.path.isdir(static_path):
-            package_root = os.path.abspath(os.path.dirname(__file__))
-            pkg_static = os.path.join(package_root, "static")
-            if os.path.isdir(pkg_static):
-                static_path = pkg_static
+        package_root = os.path.abspath(os.path.dirname(__file__))
+        pkg_static = os.path.join(package_root, "static")
 
-        if os.path.isdir(static_path):
-            app.mount(
-                config.static_url,
-                StaticFiles(directory=static_path),
-                name="static",
-            )
+        static_dirs = []
+        user_static = config.static_dir
+
+        if os.path.isdir(user_static):
+            static_dirs.append(user_static)
+
+        if os.path.isdir(pkg_static):
+            static_dirs.append(pkg_static)
+
+        if static_dirs:
+            if len(static_dirs) == 1:
+                app.mount(
+                    config.static_url,
+                    StaticFiles(directory=static_dirs[0]),
+                    name="static",
+                )
+            else:
+                app.mount(
+                    config.static_url,
+                    CascadeStaticFiles(directories=static_dirs),
+                    name="static",
+                )
 
     if config.cors_origins:
         app.add_middleware(

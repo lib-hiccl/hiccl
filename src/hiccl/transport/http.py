@@ -12,7 +12,10 @@ router = APIRouter(prefix="/hiccl")
 
 async def get_session(request: Request, response: Response):
     """FastAPI dependency: get or create session from cookie / header."""
-    from hiccl.session import Session, _sessions
+    from hiccl.session import Session
+
+    hiccl_state = request.app.state.hiccl
+    session_store = hiccl_state["session_store"]
 
     session_id = request.cookies.get("hiccl_sid") or request.query_params.get(
         "session_id"
@@ -22,13 +25,12 @@ async def get_session(request: Request, response: Response):
         session_id = uuid.uuid4().hex
         is_new = True
 
-    session = _sessions.get(session_id)
+    session = await session_store.get(session_id)
     if session is None:
-        hiccl_state = request.app.state.hiccl
         registry = hiccl_state["registry"]
         renderer = hiccl_state["renderer"]
         session = Session(session_id, registry, renderer)
-        _sessions[session_id] = session
+        await session_store.save(session)
         is_new = True
 
     session.touch()

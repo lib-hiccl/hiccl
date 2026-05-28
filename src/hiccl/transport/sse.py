@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 router = APIRouter()
@@ -39,17 +39,19 @@ class SSETransport:
 # ---------------------------------------------------------------------------
 
 
-async def get_session_sse(session_id: str):
+async def get_session_sse(session_id: str, request: Request):
     """Dependency: look up session from URL path."""
-    from hiccl.session import _sessions
+    hiccl_state = getattr(request.app.state, "hiccl", {})
+    session_store = hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
 
-    if session_id not in _sessions:
+    session = await session_store.get(session_id) if session_store else None
+    if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
-    return _sessions[session_id]
+    return session
 
 
 @router.get("/hiccl/sse/{session_id}")
-async def hiccl_sse(session_id: str, session=Depends(get_session_sse)):
+async def hiccl_sse(session_id: str, request: Request, session=Depends(get_session_sse)):
     """SSE endpoint — streams component updates to the client.
 
     Flow:
@@ -64,7 +66,10 @@ async def hiccl_sse(session_id: str, session=Depends(get_session_sse)):
     transport = SSETransport(sse_queue)
     session.transport = transport
 
-    scheduler = RenderScheduler()
+    hiccl_state = getattr(request.app.state, "hiccl", {})
+    config = hiccl_state.get("config") if isinstance(hiccl_state, dict) else None
+    coalesce_ms = getattr(config, "scheduler_coalesce_ms", 0.0) if config else 0.0
+    scheduler = RenderScheduler(coalesce_ms=coalesce_ms)
     session.on_signal_change = scheduler.mark_dirty
 
     async def render_fn(dirty_ids: set[str]) -> list[dict]:
@@ -73,7 +78,9 @@ async def hiccl_sse(session_id: str, session=Depends(get_session_sse)):
             comp = session.get_component(cid)
             if comp is None:
                 continue
-            html = session.renderer.render_component(comp)
+            html = session.renderer.render_component_cached(comp)
+            if html is None:
+                continue
             patches.append(
                 {
                     "type": "patch",

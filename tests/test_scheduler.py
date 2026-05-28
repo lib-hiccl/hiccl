@@ -101,3 +101,37 @@ class TestRenderScheduler:
         # Check that the exception was caught and logged
         assert any("Error during scheduler tick" in record.message for record in caplog.records)
         assert any(record.levelname == "ERROR" for record in caplog.records)
+
+    async def test_scheduler_coalescing(self):
+        from hiccl.scheduler import RenderScheduler
+
+        # 100ms coalescence
+        scheduler = RenderScheduler(coalesce_ms=100.0)
+        rendered_ids = []
+
+        async def render_fn(dirty_ids):
+            rendered_ids.append(frozenset(dirty_ids))
+            return []
+
+        async def push_fn(patches):
+            pass
+
+        loop = asyncio.get_event_loop()
+        scheduler.start(loop, render_fn, push_fn)
+
+        scheduler.mark_dirty("comp-a")
+        # sleep 30ms (less than coalesce_ms)
+        await asyncio.sleep(0.03)
+        scheduler.mark_dirty("comp-b")
+
+        # At this point, render should NOT have run yet because 100ms has not passed
+        assert len(rendered_ids) == 0
+
+        # sleep 90ms more (total > 100ms)
+        await asyncio.sleep(0.09)
+
+        # Render should have run now, and both comp-a and comp-b should be batched
+        assert len(rendered_ids) >= 1
+        assert frozenset({"comp-a", "comp-b"}) in rendered_ids
+
+        await scheduler.stop()

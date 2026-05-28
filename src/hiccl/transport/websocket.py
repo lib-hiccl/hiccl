@@ -52,12 +52,14 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
         5. On disconnect: session is NOT immediately disposed (supports reconnect).
     """
     from hiccl.scheduler import RenderScheduler
-    from hiccl.session import _sessions
     from hiccl.transport.protocol import NullTransport
 
     await websocket.accept()
 
-    session = _sessions.get(session_id)
+    hiccl_state = getattr(websocket.app.state, "hiccl", {})
+    session_store = hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
+    session = await session_store.get(session_id) if session_store else None
+
     if session is None:
         await websocket.close(code=4404, reason="Session not found")
         return
@@ -65,7 +67,10 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
     transport = WSTransport(websocket)
     session.transport = transport
 
-    scheduler = RenderScheduler()
+    hiccl_state = getattr(websocket.app.state, "hiccl", {})
+    config = hiccl_state.get("config") if isinstance(hiccl_state, dict) else None
+    coalesce_ms = getattr(config, "scheduler_coalesce_ms", 0.0) if config else 0.0
+    scheduler = RenderScheduler(coalesce_ms=coalesce_ms)
     session.on_signal_change = scheduler.mark_dirty
 
     async def render_fn(dirty_ids: set[str]) -> list[dict]:
@@ -74,7 +79,9 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
             component = session.get_component(cid)
             if component is None:
                 continue
-            html = session.renderer.render_component(component)
+            html = session.renderer.render_component_cached(component)
+            if html is None:
+                continue
             patches.append(
                 {
                     "type": "patch",

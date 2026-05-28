@@ -160,9 +160,61 @@ class HiccupRenderer:
 
     def __init__(self) -> None:
         self._cache: dict[str, tuple[int, str]] = {}
+        self._static_cache: dict[int, tuple[str | list, str]] = {}
+
+    def _is_static_and_cache(self, node: str | list) -> tuple[bool, str]:
+        """Check if a node is fully static (no ActionRefs). If so, cache and return HTML."""
+        if isinstance(node, str):
+            return True, html_module.escape(node, quote=False)
+        if not isinstance(node, list) or len(node) == 0:
+            return True, html_module.escape(str(node), quote=False)
+
+        node_id = id(node)
+        if node_id in self._static_cache:
+            cached_node, cached_html = self._static_cache[node_id]
+            if cached_node is node:
+                return True, cached_html
+
+        tag = node[0]
+        if tag in ("__raw__", "__fragment__"):
+            return False, ""
+
+        attrs = node[1] if len(node) > 1 else None
+        children = node[2:] if len(node) > 2 else []
+
+        if attrs and isinstance(attrs, dict):
+            for v in attrs.values():
+                if isinstance(v, ActionRef):
+                    return False, ""
+
+        children_htmls = []
+        for c in children:
+            is_child_static, child_html = self._is_static_and_cache(c)
+            if not is_child_static:
+                return False, ""
+            children_htmls.append(child_html)
+
+        attrs_html = self._render_attrs(attrs) if attrs else ""
+        children_html = "".join(children_htmls)
+
+        if tag in _VOID_ELEMENTS:
+            html_str = f"<{tag}{attrs_html}>"
+        else:
+            html_str = f"<{tag}{attrs_html}>{children_html}</{tag}>"
+
+        # Safe limit to prevent unbounded memory growth
+        if len(self._static_cache) < 10000:
+            self._static_cache[node_id] = (node, html_str)
+
+        return True, html_str
 
     def render(self, node: str | list) -> str:
         """Render a HiccupNode to an HTML string."""
+        if isinstance(node, list) and len(node) > 0:
+            is_static, cached_html = self._is_static_and_cache(node)
+            if is_static:
+                return cached_html
+
         if isinstance(node, str):
             return html_module.escape(node, quote=False)
 
@@ -209,6 +261,8 @@ class HiccupRenderer:
 
     def render_component(self, component: Component) -> str:
         """Render a component: render() → autobind → inject id → serialize."""
+        # Clear the static node cache for this render cycle to prevent object id reuse issues
+        self._static_cache.clear()
         # Set render context so @server methods return ActionRefs
         token = _in_render.set(True)
         try:

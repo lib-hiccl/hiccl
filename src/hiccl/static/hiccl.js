@@ -245,3 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
   window.hicclClient = new HicclClient(sessionId, wsUrl, sseUrl);
   interceptHtmxRequests(window.hicclClient);
 });
+
+// Bridge htmx page transitions (hx-boost) to Alpine.js tree re-initialization
+document.addEventListener("htmx:afterSettle", (event) => {
+  if (typeof Alpine !== "undefined") {
+    if (typeof Alpine.discover === "function") {
+      Alpine.discover();
+    } else if (typeof Alpine.initTree === "function") {
+      const target = (event.detail && event.detail.target) || event.target || document.body;
+      Alpine.initTree(target);
+    }
+  }
+});

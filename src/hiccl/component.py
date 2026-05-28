@@ -185,6 +185,27 @@ class Component:
     key: str | None = None
     topics: list[str] = []  # EventBus topics this component subscribes to
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        original_init = cls.__init__
+
+        def wrapped_init(self, *args, **init_kwargs):
+            is_outermost = not hasattr(self, "_in_wrapped_init")
+            if is_outermost:
+                self._in_wrapped_init = True
+            try:
+                original_init(self, *args, **init_kwargs)
+            finally:
+                if is_outermost:
+                    try:
+                        delattr(self, "_in_wrapped_init")
+                    except AttributeError:
+                        pass
+            if is_outermost:
+                self._discovered_signals()
+
+        cls.__init__ = wrapped_init
+
     def __init__(self, **props: Any) -> None:
         self.component_id = f"{self.__class__.__name__.lower()}-{uuid.uuid4().hex[:8]}"
         self._signals: dict[str, Signal[Any]] = {}
@@ -197,6 +218,10 @@ class Component:
 
         Should be called after the subclass __init__ has set up all signals.
         """
+        if getattr(self, "_signals_discovered", False):
+            return
+        self._signals_discovered = True
+
         for name in dir(self):
             if name.startswith("_"):
                 continue

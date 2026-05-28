@@ -31,10 +31,11 @@ class RenderScheduler:
         push_fn(patches)           ← WebSocket/SSE push
     """
 
-    def __init__(self) -> None:
+    def __init__(self, coalesce_ms: float = 0.0) -> None:
         self._dirty: set[str] = set()
         self._event = asyncio.Event()
         self._task: asyncio.Task | None = None
+        self.coalesce_ms = coalesce_ms
 
     def mark_dirty(self, component_id: str) -> None:
         """Called from Effect callback (sync side of signal propagation)."""
@@ -50,6 +51,8 @@ class RenderScheduler:
         while True:
             await self._event.wait()
             self._event.clear()
+            if self.coalesce_ms > 0:
+                await asyncio.sleep(self.coalesce_ms / 1000.0)
             dirty = self._dirty.copy()
             self._dirty.clear()
             if dirty:

@@ -15,8 +15,7 @@ logger = logging.getLogger("hiccl.app")
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from hiccl.session import _sessions
-
+from hiccl.session_store import SessionStore, MemorySessionStore
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
 
@@ -210,6 +209,8 @@ class HicclConfig:
     session_cleanup_interval: float = 60.0  # 1 minute
     pages: dict[str, type[Component]] | None = None
     offline_mode: bool = False
+    scheduler_coalesce_ms: float = 0.0
+    session_store: SessionStore | None = None
 
     # Layout and customization parameters
     theme: str = "dark"
@@ -220,24 +221,12 @@ class HicclConfig:
     layout: Callable[[Request, str, str, HicclConfig], str] = hiccl_default_layout
 
 
-async def _session_eviction_loop(interval: float, max_age: float) -> None:
+async def _session_eviction_loop(session_store: SessionStore, interval: float, max_age: float) -> None:
     """Periodically sweep and dispose of expired sessions."""
     while True:
         try:
             await asyncio.sleep(interval)
-            now = time.time()
-            expired_keys = []
-            for sid, session in list(_sessions.items()):
-                # Do not evict active connections
-                if session.transport.is_connected():
-                    session.touch()
-                    continue
-                if now - session.last_accessed > max_age:
-                    expired_keys.append(sid)
-            for sid in expired_keys:
-                session = _sessions.pop(sid, None)
-                if session:
-                    session.dispose()
+            await session_store.sweep_expired(max_age)
         except asyncio.CancelledError:
             break
         except Exception as e:
@@ -247,11 +236,15 @@ async def _session_eviction_loop(interval: float, max_age: float) -> None:
 def create_hiccl_app(config: HicclConfig) -> FastAPI:
     """Create and return a configured FastAPI application."""
 
+    if config.session_store is None:
+        config.session_store = MemorySessionStore()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Start session eviction background task
         eviction_task = asyncio.create_task(
             _session_eviction_loop(
+                config.session_store,
                 config.session_cleanup_interval,
                 config.session_max_age,
             )
@@ -264,16 +257,17 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
                 await eviction_task
             except asyncio.CancelledError:
                 pass
-            for session in list(_sessions.values()):
+            sessions = await config.session_store.list_sessions()
+            for session in sessions:
                 session.dispose()
-            _sessions.clear()
 
     app = FastAPI(title=config.title, version=config.version, lifespan=lifespan)
 
     app.state.hiccl = {
         "registry": config.component_registry,
         "renderer": config.renderer or HiccupRenderer(),
-        "sessions": _sessions,
+        "session_store": config.session_store,
+        "config": config,
     }
 
     if "http" in config.transport_modes:

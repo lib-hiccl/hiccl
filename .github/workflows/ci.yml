@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Lint, Format & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Toolchain via mise
+        uses: jdx/mise-action@v2
+        with:
+          # Automatically installs all tools defined in mise.toml (Python, Ruff, uv)
+          install: true
+          cache: true
+
+      - name: Run Lint Check
+        run: mise run lint
+
+      - name: Run Format Check
+        # Verify formatting compliance using Ruff check without modifying any files
+        run: mise run format --check
+
+      - name: Run Unit Tests
+        run: mise run test

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -219,6 +220,22 @@ class HicclConfig:
     head_extra: str = ""
     layout: Callable[[Request, str, str, HicclConfig], str] = hiccl_default_layout
 
+    # HMR & hREPL configurations (auto-detected from environment variables or explicitly passed)
+    live_reload: bool = field(
+        default_factory=lambda: os.environ.get("HICCL_LIVE_RELOAD") == "1"
+    )
+    hrepl_enabled: bool = field(
+        default_factory=lambda: (
+            os.environ.get("HREPL_ENABLED", "").lower() in ("true", "1")
+        )
+    )
+    hrepl_port: int = field(
+        default_factory=lambda: int(os.environ.get("HREPL_PORT", "8998"))
+    )
+    hrepl_host: str = field(
+        default_factory=lambda: os.environ.get("HREPL_HOST", "127.0.0.1")
+    )
+
 
 async def _session_eviction_loop(
     session_store: SessionStore, interval: float, max_age: float
@@ -250,6 +267,23 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
                 config.session_max_age,
             )
         )
+
+        watcher_task = None
+        if config.live_reload:
+            from hiccl.live_reload.watcher import start_watcher
+
+            watcher_task = asyncio.create_task(start_watcher(app))
+            logger.info("HMR: File watcher task spawned")
+
+        hrepl_server = None
+        if config.hrepl_enabled:
+            from hiccl.repl.server import HReplServer
+
+            hrepl_server = HReplServer(
+                host=config.hrepl_host, port=config.hrepl_port, app=app
+            )
+            await hrepl_server.start()
+
         try:
             yield
         finally:
@@ -258,6 +292,17 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
                 await eviction_task
             except asyncio.CancelledError:
                 pass
+
+            if watcher_task:
+                watcher_task.cancel()
+                try:
+                    await watcher_task
+                except asyncio.CancelledError:
+                    pass
+
+            if hrepl_server:
+                await hrepl_server.stop()
+
             sessions = await config.session_store.list_sessions()
             for session in sessions:
                 session.dispose()

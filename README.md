@@ -143,6 +143,21 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
 
+### 2. ⚡️ 极速开发模式 (HMR & hREPL)
+
+Hiccl 提供了为 AI 时代与极致 DX 打造的**开发模式双子星**：DOM 级 HMR 热重载与非阻塞 hREPL 网络套接字服务器。
+
+#### 🚀 启动开发服务器
+使用全新的 `hiccl` CLI 即可一键开启带有热更新与 REPL 支持的本地开发环境：
+```bash
+uv run hiccl dev examples.combined_app:app --live-reload --hrepl
+```
+
+*   **`--live-reload`**：启用**状态不丢失**的 DOM 级热重载（HMR）。每当你修改并保存任何 `.py` 组件代码，Hiccl 会在不重启服务器、不重新加载网页、**100% 完整保留内存中已有的 Signal 状态**的前提下，将重新加载后的类注入 ComponentRegistry，并通过 DiffEngine 增量计算 DOM 补丁，秒级在浏览器端局部更新 UI。
+*   **`--hrepl`**：在 `127.0.0.1:8998`（默认端口）启动网络 REPL 服务。
+    *   **安全防御机制**：默认隔离仅绑定 localhost 接口，启动时在 stdout 打印随机生成的 **32 位强认证 Token**（可通过 `HREPL_TOKEN` 环境变量指定）。所有的 eval 记录将安全审计至 `.hrepl_audit.log` 文件中。
+    *   **远程手术刀求值（Remote Surgery）**：支持标准 JSON-RPC 协议进行通信。您或 **AI Agent** 可直接连接该套接字发送包含 `await` 关键字的复杂多行 Python 语句，实时读取在线用户的 `Session` 实例、检索 Signals 链路甚至热修补类方法，极大降低了异步协作的调试成本。
+
 ---
 
 ## 🛠 架构设计

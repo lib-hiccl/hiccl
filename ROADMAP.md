@@ -17,7 +17,7 @@
 | 版本号 | 阶段 | 核心交付物 | 前置依赖 | 预估周期 |
 |:---|:---|:---|:---|:---|
 | **v0.1.0** | Phase 0（当前已完成） | Signal + Component + Transport + Renderer + DiffEngine | — | ✅ 已完成 |
-| **v0.2.0** | Phase 1 | HMR Live Reload + hREPL 交互式开发 | Phase 0 | 4–6 周 |
+| **v0.2.0** | Phase 1 | HMR Live Reload + hREPL 交互式开发 | Phase 0 | ✅ 已完成 |
 | **v0.3.0** | Phase 2 | `hiccl.spec` DSL + `@server` 契约验证 + Redis SessionStore | Phase 0 | 4–6 周 |
 | **v0.4.0** | Phase 3 核心 | Reagent 纯函数组件 + re-frame 订阅系统 + `hiccl.testing` 单元测试工具 | Phase 1 |  4–6 周 |
 | **v0.4.1** | Phase 3 增强 | Spec × Hypothesis 生成式测试 + 契约加固层 | Phase 2, Phase 3 核心 | 2–3 周 |
@@ -402,26 +402,36 @@ def on_source_changed(file_path):
 
 ---
 
-### 📅 Phase 1 —— HMR Live Reload + hREPL 交互式开发 (v0.2.0)
+### 📅 Phase 1 —— HMR Live Reload + hREPL 交互式开发 (v0.2.0) ✅
 
 *   **核心目标**：让开发者（和 AI Agent）获得**即时反馈**的极致开发体验。这是对外演示和吸引早期用户最关键的特性。
 *   **前置依赖**：仅依赖 Phase 0 已有的 DiffEngine、WebSocket Transport 和 Session 系统。**不依赖 Spec**。
 
+**已交付物清单**：
+
+| 模块 | 文件 / 目录 | 状态 |
+|:---|:---|:---|
+| HMR 极速 DOM 热重载引擎 | `watcher.py`, `reloader.py` | ✅ 已完成 |
+| hREPL 交互式服务器 | `server.py`, `protocol.py`, `security.py` | ✅ 已完成 |
+| CLI 命令行集成工具 | `src/hiccl/cli.py` | ✅ 已完成 |
+| 性能基准测试套件 | `benchmarks/run_benchmarks.py` | ✅ 已完成 |
+| 自动化集成测试 | `tests/test_phase1.py` | ✅ 已完成 |
+
 #### 1. HMR 极速 DOM 热重载引擎
 详见第六章的完整技术设计。核心交付物：
-- `hiccl/live_reload/watcher.py` — 基于 `watchfiles` 的 file 监控器
-- `hiccl/live_reload/reloader.py` — 模块重载与类指针替换引擎
-- 开发模式 CLI 启动参数：`hiccl dev --live-reload`
+- `hiccl/live_reload/watcher.py` — 基于 `watchfiles` 的 file 监控器 ✅
+- `hiccl/live_reload/reloader.py` — 模块重载与类指针替换引擎 ✅
+- 开发模式 CLI 启动参数：`hiccl dev --live-reload` ✅
 
 #### 2. hREPL (Hiccl Network REPL)
 详见第五章的完整技术设计与安全分层。核心交付物：
-- `hiccl/repl/server.py` — 异步 TCP Socket 服务器
-- `hiccl/repl/protocol.py` — JSON-RPC 请求/响应协议
-- `hiccl/repl/security.py` — 认证、审计日志、沙箱（可选）
-- 开发模式 CLI 启动参数：`HREPL_ENABLED=true hiccl dev`
+- `hiccl/repl/server.py` — 异步 TCP Socket 服务器 ✅
+- `hiccl/repl/protocol.py` — JSON-RPC 请求/响应协议 ✅
+- `hiccl/repl/security.py` — 认证、审计日志、沙箱（可选） ✅
+- 开发模式 CLI 启动参数：`HREPL_ENABLED=true hiccl dev` ✅
 
 #### 3. 性能基准测试
-- 建立 `benchmarks/` 目录，针对 Signal 更新延迟、Diff 计算耗时、端到端渲染时间进行基准测试。
+- 建立 `benchmarks/` 目录，针对 Signal 更新延迟、Diff 计算耗时、端到端渲染时间进行基准测试。 ✅
 - 对标 Streamlit / NiceGUI / Gradio 的同等场景。
 
 ---

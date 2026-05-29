@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 src/hiccl/__init__.py
 src/hiccl/app.py
+src/hiccl/cli.py
 src/hiccl/component.py
 src/hiccl/diff.py
 src/hiccl/eventbus.py
@@ -18,8 +19,16 @@ src/hiccl/validator.py
 src/hiccl.egg-info/PKG-INFO
 src/hiccl.egg-info/SOURCES.txt
 src/hiccl.egg-info/dependency_links.txt
+src/hiccl.egg-info/entry_points.txt
 src/hiccl.egg-info/requires.txt
 src/hiccl.egg-info/top_level.txt
+src/hiccl/live_reload/__init__.py
+src/hiccl/live_reload/reloader.py
+src/hiccl/live_reload/watcher.py
+src/hiccl/repl/__init__.py
+src/hiccl/repl/protocol.py
+src/hiccl/repl/security.py
+src/hiccl/repl/server.py
 src/hiccl/static/alpine.js
 src/hiccl/static/daisyui.css
 src/hiccl/static/hiccl.js

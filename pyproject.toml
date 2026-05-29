@@ -11,7 +11,11 @@ authors = [
 dependencies = [
   "fastapi>=0.110.0",
   "python-multipart>=0.0.6",
+  "watchfiles>=1.2.0",
 ]
+
+[project.scripts]
+hiccl = "hiccl.cli:main"
 
 [project.urls]
 Documentation = "https://github.com/shiunko/hiccl"

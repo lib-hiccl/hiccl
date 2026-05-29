@@ -293,6 +293,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "python-multipart" },
+    { name = "watchfiles" },
 ]
 
 [package.dev-dependencies]
@@ -310,6 +311,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.110.0" },
     { name = "python-multipart", specifier = ">=0.0.6" },
+    { name = "watchfiles", specifier = ">=1.2.0" },
 ]
 
 [package.metadata.requires-dev]

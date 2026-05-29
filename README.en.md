@@ -143,6 +143,21 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
 
+### 2. ⚡️ Instant Development Mode (HMR & hREPL)
+
+Hiccl offers a powerful **Developer Mode Twin Engine** engineered specifically for the AI era and maximum DX: state-preserving DOM-level HMR (Hot Module Replacement) and a non-blocking hREPL network socket server.
+
+#### 🚀 Launching the Dev Server
+Use the new `hiccl` CLI tool to spin up your local app instantly with hot-reloading and REPL support:
+```bash
+uv run hiccl dev examples.combined_app:app --live-reload --hrepl
+```
+
+*   **`--live-reload`**: Activates **state-preserving** DOM-level Hot Module Replacement (HMR). Whenever you modify and save any `.py` component code, Hiccl reloads the module, updates the ComponentRegistry, and calculates the minimal DOM patches via the DiffEngine — **100% preserving all in-memory live Signal values** in active sessions, and updating the browser in less than a second without page refreshes.
+*   **`--hrepl`**: Launches the interactive network REPL server on `127.0.0.1:8998` (default).
+    *   **Security Architecture**: Bound to localhost by default, generating a random **32-character authentication Token** on start (overridable via `HREPL_TOKEN` env var). All transactions are written securely to `.hrepl_audit.log` in the workspace.
+    *   **Remote Surgery Evaluation**: Operates over standard JSON-RPC. Developers or **AI Agents** can open TCP socket connections to evaluate complex multi-line and async statements containing `await`, allowing them to inspect live `Session` instances, probe Signals, and live-patch class methods on a hot, active server.
+
 ---
 
 ## 🛠 Architecture

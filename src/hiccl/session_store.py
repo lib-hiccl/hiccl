@@ -134,11 +134,96 @@ class RedisSessionStore(SessionStore):
         else:
             try:
                 import redis
+                from redis.retry import Retry
+                from redis.backoff import ExponentialBackoff
 
-                self._redis = redis.from_url(redis_url, decode_responses=True)
+                # 配置原生的指数退避重连机制
+                retry = Retry(ExponentialBackoff(), 3)
+
+                # 配置 ConnectionPool
+                pool = redis.ConnectionPool.from_url(
+                    redis_url,
+                    decode_responses=True,
+                    retry_on_timeout=True,
+                )
+                self._redis = redis.Redis(connection_pool=pool, retry=retry)
                 self._redis.ping()
             except Exception:
                 self._redis = DummyRedisClient()
+
+    def lock(self, session_id: str, timeout: float = 10.0) -> Any:
+        """返回针对特定 session_id 的悲观分布式锁上下文管理器。
+
+        适用于在高频 WebSocket 写入时防止状态竞争覆盖。
+        """
+        if self._redis is not None and not isinstance(self._redis, DummyRedisClient):
+            lock_key = f"hiccl:lock:{session_id}"
+            return self._redis.lock(lock_key, timeout=timeout)
+        else:
+
+            class DummyLock:
+                async def __aenter__(self):
+                    return self
+
+                async def __aexit__(self, exc_type, exc_val, exc_tb):
+                    pass
+
+            return DummyLock()
+
+    def _pack_data(self, data: Any) -> str:
+        """使用 msgpack 压缩并进行 base64 编码，如果 msgpack 不可用，则优雅降级使用 orjson 或内置 json。"""
+        try:
+            import msgpack
+            import base64
+
+            packed = msgpack.packb(data)
+            return "msgpack:" + base64.b64encode(packed).decode("ascii")
+        except (ImportError, Exception):
+            pass
+
+        try:
+            import orjson
+
+            return "orjson:" + orjson.dumps(data).decode("utf-8")
+        except (ImportError, Exception):
+            pass
+
+        import json
+
+        return "json:" + json.dumps(data)
+
+    def _unpack_data(self, data_str: str) -> Any:
+        """对打包的数据进行解压和还原，支持优雅的降级兼容。"""
+        if not data_str:
+            return {}
+
+        if data_str.startswith("msgpack:"):
+            import msgpack
+            import base64
+
+            raw_b64 = data_str[len("msgpack:") :]
+            packed = base64.b64decode(raw_b64.encode("ascii"))
+            return msgpack.unpackb(packed)
+
+        if data_str.startswith("orjson:"):
+            import orjson
+
+            raw_json = data_str[len("orjson:") :]
+            return orjson.loads(raw_json)
+
+        if data_str.startswith("json:"):
+            import json
+
+            raw_json = data_str[len("json:") :]
+            return json.loads(raw_json)
+
+        # 兼容旧版本不带前缀的裸 JSON 串
+        import json
+
+        try:
+            return json.loads(data_str)
+        except Exception:
+            return {}
 
     async def get(self, session_id: str) -> Optional[Session]:
         # 1. Try local cache
@@ -163,26 +248,24 @@ class RedisSessionStore(SessionStore):
         if not meta_data_str:
             return None
 
-        import json
-        from hiccl.session import Session
-
-        try:
-            meta_data = json.loads(meta_data_str)
-        except Exception:
+        meta_data = self._unpack_data(meta_data_str)
+        if not meta_data:
             return None
 
         if not self.registry or not self.renderer:
             return None
 
+        from hiccl.session import Session
+
         # Reconstruct Session instance
-        session = Session(session_id, self.registry, self.renderer)
+        session = Session(session_id, self.registry, self.renderer, store=self)
 
         # Restore component hierarchy and their signals
         signals_data_str = self._redis.get(signals_key)
         signals_data = {}
         if signals_data_str:
             try:
-                signals_data = json.loads(signals_data_str)
+                signals_data = self._unpack_data(signals_data_str)
             except Exception:
                 pass
 
@@ -211,8 +294,6 @@ class RedisSessionStore(SessionStore):
         if self._redis is None:
             return
 
-        import json
-
         components_list = []
         signals_data = {}
 
@@ -237,8 +318,8 @@ class RedisSessionStore(SessionStore):
         signals_key = f"hiccl:session:{session.session_id}:signals"
 
         try:
-            self._redis.setex(meta_key, 1800, json.dumps(meta_data))
-            self._redis.setex(signals_key, 1800, json.dumps(signals_data))
+            self._redis.setex(meta_key, 1800, self._pack_data(meta_data))
+            self._redis.setex(signals_key, 1800, self._pack_data(signals_data))
         except Exception:
             pass
 

@@ -18,7 +18,7 @@
 |:---|:---|:---|:---|:---|
 | **v0.1.0** | Phase 0（当前已完成） | Signal + Component + Transport + Renderer + DiffEngine | — | ✅ 已完成 |
 | **v0.2.0** | Phase 1 | HMR Live Reload + hREPL 交互式开发 | Phase 0 | ✅ 已完成 |
-| **v0.3.0** | Phase 2 | `hiccl.spec` DSL + `@server` 契约验证 + Redis SessionStore | Phase 0 | 4–6 周 |
+| **v0.3.0** | Phase 2 | `hiccl.spec` DSL + `@server` 契约验证 + Redis SessionStore | Phase 0 | ✅ 已完成 |
 | **v0.4.0** | Phase 3 核心 | Reagent 纯函数组件 + re-frame 订阅系统 + `hiccl.testing` 单元测试工具 | Phase 1 |  4–6 周 |
 | **v0.4.1** | Phase 3 增强 | Spec × Hypothesis 生成式测试 + 契约加固层 | Phase 2, Phase 3 核心 | 2–3 周 |
 | **v0.5.0** | Phase 4 | CSP Channel + Transducers 中间件 | Phase 0 | 4–6 周 |
@@ -436,7 +436,7 @@ def on_source_changed(file_path):
 
 ---
 
-### 📅 Phase 2 —— `hiccl.spec` 契约系统与生产化基石 (v0.3.0)
+### 📅 Phase 2 —— `hiccl.spec` 契约系统与生产化基石 (v0.3.0) ✅
 
 *   **核心目标**：为框架注入运行时契约验证层，补齐 Redis 会话存储等生产化短板。
 *   **前置依赖**：仅依赖 Phase 0。**可与 Phase 1 并行推进**。

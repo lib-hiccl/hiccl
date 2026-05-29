@@ -41,7 +41,10 @@
 ## ⚡️ 核心特性
 
 *   **⚡️ 100% 声明式组件**：仅用嵌套 Python 列表（Hiccup）描述 UI，框架自动将 `on_click` 等事件绑定转化为底层的高能网络动作，没有繁琐的 AJAX/Fetch 胶水代码。
-*   **🔌 双向反应式状态**：基于 `Signal` 和 `Effect`，任何状态改变都会在服务端自动生成新的虚拟 DOM 并计算最小 Diff 补丁，通过 WebSockets 或 SSE（服务器发送事件）实时推送至前端。
+*   **🔌 双向反应式状态与便捷工厂**：基于 `Signal`（`signal`）、`ComputedSignal`（`computed`）和 `Effect`（`effect`）以及批量事务 `batch`。任何状态改变都会在服务端自动生成新的虚拟 DOM 并计算最小 Diff 补丁。
+*   **🛡️ 运行时 `hiccl.spec` 契约保障**：支持 Clojure-like 声明式数据契约，无缝守卫 `@server` 方法边界；提供结构化 `explain_data` 报错，赋予 AI Agent 极佳的错误内省与报错自愈闭环能力。
+*   **🔐 生产级 Redis 存储与分布式锁**：`RedisSessionStore` 支持 ConnectionPool 和指数退避重连；采用 Base64+Msgpack 高压缩率序列化并支持优雅降级；内置分布式锁悲观机制，规避高频并发状态覆写。
+*   **🔀 MQTT 层级通配符总线**：`EventBus` 原生支持层级通配符订阅（`*` 匹配单层，`#` 匹配多层），在发布时自动通过高速正则缓存路由精准分发。
 *   **🎨 内置 DaisyUI & TailwindCSS**：默认集成顶级暗色调毛玻璃组件库（DaisyUI）和原子化样式（TailwindCSS），开箱即用构建极其现代、高级的用户界面。
 *   **🌿 Alpine.js 客户端加速**：完全移除传统的 Hyperscript，深度整合 Alpine.js，支持以标准的 HTML 属性在浏览器端运行极速的交互渲染（如每秒 60 帧的高频计时器与毫秒级时差偏差计算）。
 *   **📦 100% 离线与内网就绪（Air-gapped Ready）**：所有静态依赖（`tailwind.js`、`daisyui.css`、`alpine.js`、`htmx.js`）完全本地托管于 `static/` 目录下。无需任何互联网连接即可在隔离的物理内网高速运行。

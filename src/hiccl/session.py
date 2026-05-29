@@ -32,6 +32,7 @@ class Session:
         session_id: str,
         registry: ComponentRegistry,
         renderer: HiccupRenderer,
+        store: Any = None,
     ) -> None:
         self.session_id = session_id
         self._components: dict[str, Component] = {}
@@ -40,6 +41,7 @@ class Session:
         self.on_signal_change: Callable[[str], None] | None = None
         self.transport: Transport = NullTransport()
         self.last_accessed: float = time.time()
+        self._store = store
 
         # EventBus integration
         self._event_queue: asyncio.Queue[Any] | None = None
@@ -117,9 +119,11 @@ class Session:
         if asyncio.iscoroutine(result):
             await result
 
-        # Auto-publish to EventBus for the component's topics
+        # Auto-publish to EventBus for the component's non-wildcard topics
         topics = getattr(component, "topics", [])
         for topic in topics:
+            if "*" in topic or "#" in topic:
+                continue
             await event_bus.publish(
                 topic,
                 {
@@ -141,6 +145,8 @@ class Session:
         self.touch()
         if self._event_queue is None:
             return
+        from hiccl.eventbus import match_topic
+
         while not self._event_queue.empty():
             try:
                 msg = self._event_queue.get_nowait()
@@ -156,8 +162,10 @@ class Session:
                 if self.session_id == source_session and cid == source_cid:
                     continue
                 comp_topics = getattr(comp, "topics", [])
-                if topic in comp_topics:
-                    comp.on_broadcast(topic)
+                for pattern in comp_topics:
+                    if match_topic(pattern, topic):
+                        comp.on_broadcast(topic)
+                        break
 
     # -- Cleanup -----------------------------------------------------------
 

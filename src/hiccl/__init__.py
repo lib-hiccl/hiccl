@@ -60,6 +60,16 @@ def signal(initial):
     return Signal(initial)
 
 
+def computed(fn):
+    """Create a new ComputedSignal with the given compute function."""
+    return ComputedSignal(fn)
+
+
+def effect(fn):
+    """Create a new Effect with the given effect function."""
+    return Effect(fn)
+
+
 __all__ = [
     # Signal system
     "Signal",
@@ -67,6 +77,8 @@ __all__ = [
     "Effect",
     "batch",
     "signal",
+    "computed",
+    "effect",
     # Hiccup DSL
     "div",
     "h1",

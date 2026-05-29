@@ -15,6 +15,7 @@ src/hiccl/scheduler.py
 src/hiccl/session.py
 src/hiccl/session_store.py
 src/hiccl/signal.py
+src/hiccl/spec.py
 src/hiccl/validator.py
 src/hiccl.egg-info/PKG-INFO
 src/hiccl.egg-info/SOURCES.txt
@@ -45,6 +46,8 @@ tests/test_component.py
 tests/test_diff.py
 tests/test_hiccup.py
 tests/test_offline_mode.py
+tests/test_phase1.py
+tests/test_phase2.py
 tests/test_redis_store.py
 tests/test_registry.py
 tests/test_renderer.py

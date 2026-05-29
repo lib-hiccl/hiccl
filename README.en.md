@@ -41,7 +41,10 @@
 ## ⚡️ Key Features
 
 *   **⚡️ 100% Declarative Components**: Describe your UI using only nested Python lists. The framework auto-binds events (like `on_click`) into seamless server-side methods with zero boilerplate AJAX or fetch glue code.
-*   **🔌 Bidirectional Reactive State**: Driven by native `Signal` and `Effect` primitives. State mutations trigger automatic virtual-DOM diffing, pushing minimal HTML patches via WebSockets/SSE to the client instantly.
+*   **🔌 Reactive State & Elegant Factories**: Powered by native `Signal` (`signal`), `ComputedSignal` (`computed`), and `Effect` (`effect`) primitives, as well as `batch` transaction support. State mutations trigger automatic virtual-DOM diffing, pushing minimal HTML patches via WebSockets/SSE to the client instantly.
+*   **🛡️ Runtime `hiccl.spec` Contract Security**: Implements Clojure-like declarative data contracts to guard `@server` method boundaries. Provides structured `explain_data` errors, enabling AI agents to engage in excellent error introspection and self-healing.
+*   **🔐 Production Redis Store & Locks**: `RedisSessionStore` supports ConnectionPool and exponential-backoff retries. Serializes data using Base64+Msgpack with elegant fallback; integrates a pessimistic distributed lock mechanism to avoid concurrent state overwrites.
+*   **🔀 MQTT Wildcard EventBus**: `EventBus` natively supports hierarchical wildcard subscriptions (`*` for single level, `#` for zero or more levels) matching with high-performance regex compilation cache routing.
 *   **🎨 Built-in DaisyUI & TailwindCSS**: Ships with integrated premium dark-mode glassmorphic components (DaisyUI) and utility-first styling (TailwindCSS) to build stunning user interfaces out-of-the-box.
 *   **🌿 Client-Side Acceleration with Alpine.js**: Bypasses verbose custom scripts in favor of Alpine.js, permitting high-frequency client-side interactions (like 60fps local ticking clocks and real-time clock skew calculation) defined as native attributes.
 *   **📦 100% Offline & Air-Gapped Ready**: All critical static assets (`tailwind.js`, `daisyui.css`, `alpine.js`, `htmx.js`) are fully hosted locally in the `static/` folder. Build and deploy fast reactive applications in completely disconnected physical networks.

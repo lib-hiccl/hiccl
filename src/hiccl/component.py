@@ -75,17 +75,53 @@ class BoundAction(ActionRef):
         component: Component,
         fn: Callable,
         name: str,
+        spec: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(component.component_id, name)
         self._component = component
         self._fn = fn
+        self.spec = spec
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         if _in_render.get():
             # Render context → return a new ActionRef with bound args
             bound = self._map_args(args, kwargs)
             return ActionRef(self.component_id, self.method_name, bound)
+
         # Transport context → execute the real method
+        if self.spec:
+            from hiccl.spec import Spec, SpecValidationError
+
+            args_spec = self.spec.get("args")
+            return_spec = self.spec.get("return")
+
+            if args_spec:
+                bound_args = self._map_args(args, kwargs)
+                errors = []
+                if isinstance(args_spec, dict):
+                    for param_name, param_spec in args_spec.items():
+                        if isinstance(param_spec, Spec):
+                            val = bound_args.get(param_name)
+                            field_errors = param_spec.explain_data(
+                                val, path=[param_name]
+                            )
+                            if field_errors:
+                                errors.extend(field_errors)
+                elif isinstance(args_spec, Spec):
+                    field_errors = args_spec.explain_data(bound_args)
+                    if field_errors:
+                        errors.extend(field_errors)
+
+                if errors:
+                    raise SpecValidationError(errors)
+
+            res = self._fn(self._component, *args, **kwargs)
+
+            if return_spec and isinstance(return_spec, Spec):
+                return_spec.validate(res)
+
+            return res
+
         return self._fn(self._component, *args, **kwargs)
 
     # -- helpers -----------------------------------------------------------
@@ -123,9 +159,10 @@ class ServerActionDescriptor:
         self.increment(step=5) → same
     """
 
-    def __init__(self, fn: Callable) -> None:
+    def __init__(self, fn: Callable, spec: dict[str, Any] | None = None) -> None:
         self._fn = fn
         self._name = fn.__name__
+        self.spec = spec
         # Mark the original function so reflection on the class still works
         setattr(self._fn, _SERVER_METHODS_ATTR, True)
 
@@ -137,7 +174,7 @@ class ServerActionDescriptor:
     ) -> BoundAction | ServerActionDescriptor:
         if obj is None:
             return self
-        return BoundAction(obj, self._fn, self._name)
+        return BoundAction(obj, self._fn, self._name, spec=self.spec)
 
 
 # ---------------------------------------------------------------------------
@@ -145,16 +182,22 @@ class ServerActionDescriptor:
 # ---------------------------------------------------------------------------
 
 
-def server(method: Callable) -> ServerActionDescriptor:
+def server(
+    method: Callable | None = None,
+    *,
+    spec: dict[str, Any] | None = None,
+) -> Any:
     """Mark a method as a server action.
 
-    Replaces the method with a ``ServerActionDescriptor`` so that:
-
-    * In ``render()``: ``self.method`` / ``self.method(args)`` returns
-      an ``ActionRef`` (deferred binding for ``on_*`` attributes).
-    * In transport context: the method executes normally.
+    Can be used as @server, or as @server(spec=...).
     """
-    return ServerActionDescriptor(method)
+    if method is not None:
+        return ServerActionDescriptor(method)
+
+    def decorator(fn: Callable) -> ServerActionDescriptor:
+        return ServerActionDescriptor(fn, spec=spec)
+
+    return decorator
 
 
 def get_server_methods(cls_or_instance: Any) -> dict[str, Callable]:

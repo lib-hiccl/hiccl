@@ -29,7 +29,7 @@ async def get_session(request: Request, response: Response):
     if session is None:
         registry = hiccl_state["registry"]
         renderer = hiccl_state["renderer"]
-        session = Session(session_id, registry, renderer)
+        session = Session(session_id, registry, renderer, store=session_store)
         await session_store.save(session)
         is_new = True
 

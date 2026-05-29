@@ -1,6 +1,6 @@
 [project]
 name = "hiccl"
-version = "0.2.0"
+version = "0.3.0"
 description = "Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State"
 requires-python = ">=3.11"
 license = "MIT"
@@ -12,6 +12,13 @@ dependencies = [
   "fastapi>=0.110.0",
   "python-multipart>=0.0.6",
   "watchfiles>=1.2.0",
+]
+
+[project.optional-dependencies]
+full = [
+  "redis>=5.0.0",
+  "msgpack>=1.0.0",
+  "orjson>=3.9.0",
 ]
 
 [project.scripts]

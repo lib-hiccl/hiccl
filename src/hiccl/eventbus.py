@@ -97,12 +97,20 @@ class EventBus:
                 "source_session": None,
             }
 
+        # Deduplicate target queues across all matching patterns to ensure
+        # that a queue subscribed to multiple overlapping wildcard topics receives each message exactly once.
+        queues_to_deliver: set[asyncio.Queue[Any]] = set()
         for pattern, queues in list(self._subscribers.items()):
             if match_topic(pattern, topic):
-                for queue in list(queues):
-                    try:
-                        queue.put_nowait(envelope)
-                    except asyncio.QueueFull:
+                for queue in queues:
+                    queues_to_deliver.add(queue)
+
+        for queue in queues_to_deliver:
+            try:
+                queue.put_nowait(envelope)
+            except asyncio.QueueFull:
+                for pattern, queues in list(self._subscribers.items()):
+                    if queue in queues:
                         dead_subscribers[pattern].append(queue)
 
         for pattern, dead_queues in dead_subscribers.items():

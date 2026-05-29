@@ -43,6 +43,14 @@ class Session:
         self.last_accessed: float = time.time()
         self._store = store
 
+        # Initialize re-frame states for this session
+        import copy
+        from hiccl.signal import Signal
+        from hiccl.re_frame import _re_frame_initial_state
+
+        self._re_frame_db = Signal(copy.deepcopy(_re_frame_initial_state))
+        self._re_frame_subs: dict[Any, Any] = {}
+
         # EventBus integration
         self._event_queue: asyncio.Queue[Any] | None = None
         self._subscribed_topics: set[str] = set()
@@ -107,33 +115,39 @@ class Session:
         Returns the method's return value (if any).
         """
         self.touch()
-        component = self._components.get(component_id)
-        if component is None:
-            return None
+        from hiccl.re_frame import _current_session
 
-        methods = get_server_methods(component)
-        if method_name not in methods:
-            return None
+        token_session = _current_session.set(self)
+        try:
+            component = self._components.get(component_id)
+            if component is None:
+                return None
 
-        result = methods[method_name](**args)
-        if asyncio.iscoroutine(result):
-            await result
+            methods = get_server_methods(component)
+            if method_name not in methods:
+                return None
 
-        # Auto-publish to EventBus for the component's non-wildcard topics
-        topics = getattr(component, "topics", [])
-        for topic in topics:
-            if "*" in topic or "#" in topic:
-                continue
-            await event_bus.publish(
-                topic,
-                {
-                    "topic": topic,
-                    "source": component_id,
-                    "source_session": self.session_id,
-                },
-            )
+            result = methods[method_name](**args)
+            if asyncio.iscoroutine(result):
+                await result
 
-        return result
+            # Auto-publish to EventBus for the component's non-wildcard topics
+            topics = getattr(component, "topics", [])
+            for topic in topics:
+                if "*" in topic or "#" in topic:
+                    continue
+                await event_bus.publish(
+                    topic,
+                    {
+                        "topic": topic,
+                        "source": component_id,
+                        "source_session": self.session_id,
+                    },
+                )
+
+            return result
+        finally:
+            _current_session.reset(token_session)
 
     # -- EventBus processing -----------------------------------------------
 

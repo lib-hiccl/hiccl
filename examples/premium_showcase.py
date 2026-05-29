@@ -22,12 +22,19 @@ from hiccl import (
     ComponentRegistry,
     HicclConfig,
     batch,
+    component,
     computed,
     create_hiccl_app,
     effect,
     server,
     signal,
     spec,
+    use_signal,
+    reg_state,
+    reg_sub,
+    reg_event,
+    subscribe,
+    dispatch,
 )
 from hiccl.eventbus import event_bus
 from hiccl.hiccup import (
@@ -600,7 +607,201 @@ class WildcardEventHub(Component):
 
 
 # ---------------------------------------------------------------------------
-# 5. 联合大秀主面板 (Main Showcase Frame)
+# 5. Phase 3 纯函数组件与 re-frame 单向数据流演示 (Reagent & re-frame Showcase)
+# ---------------------------------------------------------------------------
+
+# 注册 re-frame 初始状态
+reg_state(
+    {
+        "todos": [
+            {"id": 1, "text": "体验 Phase 0-2 的极速反应式与契约", "done": True},
+            {"id": 2, "text": "体验 Phase 3 纯函数组件与单向数据流", "done": False},
+        ]
+    }
+)
+
+
+# 注册派生数据订阅
+@reg_sub("todo-list")
+def sub_todo_list(db):
+    return db.get("todos", [])
+
+
+@reg_sub("todo-count")
+def sub_todo_count(db):
+    todos = db.get("todos", [])
+    total = len(todos)
+    done = sum(1 for t in todos if t.get("done"))
+    return total, done
+
+
+# 注册带 Spec 契约的事件处理器！
+TodoTextSpec = spec.string(
+    min_len=2, max_len=30, pattern=r"^[a-zA-Z0-9_\u4e00-\u9fa5\s\?\!\.,\-\(\)]+$"
+)
+
+
+@reg_event("add-todo-item", spec={"args": [TodoTextSpec]})
+def event_add_todo(db, text: str):
+    todos = db.get("todos", [])
+    new_id = max((t["id"] for t in todos), default=0) + 1
+    new_todo = {"id": new_id, "text": text, "done": False}
+    return {**db, "todos": todos + [new_todo]}
+
+
+@reg_event("toggle-todo-item")
+def event_toggle_todo(db, todo_id: int):
+    if isinstance(todo_id, str):
+        todo_id = int(todo_id)
+    todos = db.get("todos", [])
+    new_todos = []
+    for t in todos:
+        if t["id"] == todo_id:
+            new_todos.append({**t, "done": not t["done"]})
+        else:
+            new_todos.append(t)
+    return {**db, "todos": new_todos}
+
+
+@component("reframe-todo-demo")
+def ReframeTodoDemo():
+    """纯函数组件：使用 use_signal、subscribe 和 dispatch 构建优雅的 Todo 卡片。"""
+    # 局部 UI 状态
+    input_text = use_signal("")
+    spec_error = use_signal("")
+    prev_total = use_signal(0)
+
+    # 订阅全局状态
+    todos = subscribe("todo-list")
+    total, done = subscribe("todo-count").get()
+
+    # 自愈捕获与 typed input 状态保留
+    from hiccl.component import _current_rendering_component
+
+    comp = _current_rendering_component.get()
+    submitted = getattr(comp, "_submitted_values", {})
+    if "todo_text" in submitted:
+        input_text.set(submitted["todo_text"])
+        del submitted["todo_text"]
+
+    err_msg = getattr(comp, "_last_spec_error", None) or ""
+
+    # 任务成功添加或减少后的清理状态机
+    if total > prev_total.get():
+        input_text.set("")
+        spec_error.set("")
+        prev_total.set(total)
+    elif total < prev_total.get():
+        prev_total.set(total)
+
+    # 首次载入初始化 prev_total 避免误触清空逻辑
+    if prev_total.get() == 0 and total > 0:
+        prev_total.set(total)
+
+    return div(
+        {
+            "class": "card bg-base-200 border border-base-300 shadow-2xl p-6 flex flex-col gap-4"
+        },
+        div(
+            {
+                "class": "flex flex-wrap justify-between items-center gap-2 border-b border-base-300 pb-3"
+            },
+            h3(
+                {
+                    "class": "text-lg md:text-xl font-bold text-success flex items-center gap-2"
+                },
+                "🎯 反应式纯函数式 Todo 大秀",
+            ),
+            span({"class": "badge badge-success"}, "Phase 3 函数式"),
+        ),
+        p(
+            {"class": "text-sm text-base-content/70"},
+            "这是纯函数式反应式大秀。局部状态由 `use_signal()` 闭包捕获，数据源全量由 `subscribe` 驱动，事件由 `dispatch` 强一致单向更新：",
+        ),
+        # 统计数据条
+        div(
+            {
+                "class": "flex gap-4 bg-base-300 p-3 rounded-xl border border-base-200 justify-around text-center text-xs font-semibold font-mono"
+            },
+            div(
+                None,
+                span({"class": "opacity-50"}, "总任务数: "),
+                span({"class": "text-primary font-bold"}, total),
+            ),
+            div(
+                None,
+                span({"class": "opacity-50"}, "已完成: "),
+                span({"class": "text-success font-bold"}, done),
+            ),
+            div(
+                None,
+                span({"class": "opacity-50"}, "待处理: "),
+                span({"class": "text-warning font-bold"}, total - done),
+            ),
+        ),
+        # 错误提示
+        div(
+            {
+                "class": "alert alert-error bg-red-950/40 border border-red-500/30 text-red-200 text-xs p-2 rounded-lg"
+            },
+            f"⚠️ 未满足契约: {err_msg}",
+        )
+        if err_msg
+        else "",
+        # 列表项
+        ul(
+            {"class": "flex flex-col gap-2"},
+            *[
+                li(
+                    {
+                        "class": "flex justify-between items-center bg-base-300 p-3 rounded-lg border border-base-200 text-sm font-semibold"
+                    },
+                    span(
+                        {
+                            "class": f"{'line-through opacity-40 text-success' if item['done'] else 'text-white'}"
+                        },
+                        item["text"],
+                    ),
+                    button(
+                        {
+                            "class": f"btn btn-xs {'btn-success' if item['done'] else 'btn-outline btn-warning'}",
+                            # 客户端点击：通过 dispatch 绑定事件，直接触发服务端事件处理器！
+                            "on_click": dispatch("toggle-todo-item", item["id"]),
+                        },
+                        "✓ 已完成" if item["done"] else "标记完成",
+                    ),
+                )
+                for item in todos.get()
+            ],
+        ),
+        # 新增表单
+        form(
+            {
+                "class": "join mt-2 w-full",
+                "on_submit": dispatch("add-todo-item"),
+            },
+            input_(
+                {
+                    "type": "text",
+                    "name": "todo_text",
+                    "class": "input input-bordered input-sm join-item flex-1",
+                    "placeholder": "新增任务 (需 2~30 字，自动触发 Spec 强检验)",
+                    "value": input_text.get(),
+                }
+            ),
+            button(
+                {
+                    "class": "btn btn-success btn-sm join-item",
+                    "type": "submit",
+                },
+                "➕ 添加",
+            ),
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 6. 联合大秀主面板 (Main Showcase Frame)
 # ---------------------------------------------------------------------------
 
 
@@ -614,6 +815,7 @@ class PremiumShowcaseFrame(Component):
         self.sandbox_comp = None
         self.profile_comp = None
         self.event_comp = None
+        self.reframe_comp = None
 
     def mount(self) -> None:
         # 在活动 Session 中挂载并装配子组件
@@ -625,6 +827,9 @@ class PremiumShowcaseFrame(Component):
         )
         self.event_comp = self._session.mount_component(
             "wildcard-event-hub", cid="event-main"
+        )
+        self.reframe_comp = self._session.mount_component(
+            "reframe-todo-demo", cid="reframe-main"
         )
 
         # 检测存储引擎状态
@@ -641,6 +846,7 @@ class PremiumShowcaseFrame(Component):
         sb_html = self._session.renderer.render_component(self.sandbox_comp)
         pf_html = self._session.renderer.render_component(self.profile_comp)
         ev_html = self._session.renderer.render_component(self.event_comp)
+        rf_html = self._session.renderer.render_component(self.reframe_comp)
 
         return div(
             {"class": "flex flex-col gap-6 w-full max-w-6xl mx-auto px-4"},
@@ -659,7 +865,7 @@ class PremiumShowcaseFrame(Component):
                     ),
                     p(
                         {"class": "text-sm text-base-content/60 mt-1 max-w-xl"},
-                        "Python 中的 Clojure 哲学全栈全自愈反应式框架。本示例已深度打通并高亮展现了 Phase 0、1、2 所有革命性特性！",
+                        "Python 中的 Clojure 哲学全栈全自愈反应式框架。本示例已深度打通并高亮展现了 Phase 0、1、2、3 所有革命性特性！",
                     ),
                 ),
                 div(
@@ -689,16 +895,17 @@ class PremiumShowcaseFrame(Component):
                 raw(sb_html),
                 raw(pf_html),
             ),
-            # 底部通配符事件总线大秀 (双列宽)
+            # 底部 re-frame 大秀与事件总线大秀 (双列宽)
             div(
-                {"class": "grid grid-cols-1 gap-6"},
+                {"class": "grid grid-cols-1 md:grid-cols-2 gap-6"},
+                raw(rf_html),
                 raw(ev_html),
             ),
         )
 
 
 # ---------------------------------------------------------------------------
-# 6. 应用引导配置与启动 (FastAPI Launch)
+# 7. 应用引导配置与启动 (FastAPI Launch)
 # ---------------------------------------------------------------------------
 
 # 实例化全局组件注册表
@@ -707,6 +914,7 @@ registry = ComponentRegistry()
 registry.register("reactive-sandbox", ReactiveSandbox)
 registry.register("spec-profile-card", SpecProfileCard)
 registry.register("wildcard-event-hub", WildcardEventHub)
+registry.register("reframe-todo-demo", ReframeTodoDemo)
 registry.register("premium-showcase-frame", PremiumShowcaseFrame)
 
 # 配置 RedisSessionStore (含 Msgpack & 连接池加固)
@@ -720,7 +928,7 @@ config = HicclConfig(
     transport_modes={"http", "ws", "sse"},
     pages={"/": PremiumShowcaseFrame},
     brand_name="Hiccl Premium Showcase",
-    title="Hiccl Premium Showcase — Phase 0, 1, 2 大秀",
+    title="Hiccl Premium Showcase — Phase 0-3 联合大秀",
     theme="night",
     show_navbar=False,  # 隐藏默认导航，使用我们定制的豪华大横幅
 )

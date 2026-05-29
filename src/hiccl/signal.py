@@ -112,13 +112,23 @@ class Signal(Generic[T]):
 # ---------------------------------------------------------------------------
 
 
+_NO_FALLBACK = object()
+
+
 class ComputedSignal(Signal[T]):
     """Derived signal: lazily recomputes when source signals change."""
 
-    def __init__(self, compute_fn: Callable[[], T]) -> None:
+    def __init__(
+        self,
+        compute_fn: Callable[[], T],
+        fallback: Any = _NO_FALLBACK,
+        on_error: Callable[[Exception], None] | None = None,
+    ) -> None:
         self._compute_fn = compute_fn
         self._dirty = True
         self._sources: list[Signal[Any]] = []
+        self.fallback = fallback
+        self.on_error = on_error
         super().__init__(None)  # type: ignore[arg-type]
         # Initial computation to set value and discover sources
         self._recompute()
@@ -141,6 +151,16 @@ class ComputedSignal(Signal[T]):
         token = _current_tracker.set(tracker)
         try:
             new_value = self._compute_fn()
+        except Exception as e:
+            if self.on_error is not None:
+                try:
+                    self.on_error(e)
+                except Exception:
+                    pass
+            if self.fallback is not _NO_FALLBACK:
+                new_value = self.fallback
+            else:
+                raise e
         finally:
             _current_tracker.reset(token)
 
@@ -185,6 +205,20 @@ class Effect:
         token = _current_tracker.set(tracker)
         try:
             self._effect_fn()
+        except Exception as e:
+            import asyncio
+            from hiccl.eventbus import event_bus
+
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    event_bus.publish(
+                        "hiccl.error.effect",
+                        {"error": str(e), "exception": e, "effect": self},
+                    )
+                )
+            except RuntimeError:
+                pass
         finally:
             _current_tracker.reset(token)
 

@@ -53,6 +53,8 @@ from hiccl.session import Session
 from hiccl.signal import ComputedSignal, Effect, Signal, batch
 from hiccl.transport.protocol import NullTransport, Transport
 from hiccl.diff import Diff, DiffEngine
+from hiccl.component import use_signal
+from hiccl.re_frame import reg_state, reg_sub, reg_event, subscribe, dispatch
 
 
 def signal(initial):
@@ -60,9 +62,15 @@ def signal(initial):
     return Signal(initial)
 
 
-def computed(fn):
+_SENTINEL = object()
+
+
+def computed(fn, fallback=_SENTINEL, on_error=None):
     """Create a new ComputedSignal with the given compute function."""
-    return ComputedSignal(fn)
+    from hiccl.signal import _NO_FALLBACK
+
+    actual_fallback = fallback if fallback is not _SENTINEL else _NO_FALLBACK
+    return ComputedSignal(fn, fallback=actual_fallback, on_error=on_error)
 
 
 def effect(fn):
@@ -146,4 +154,11 @@ __all__ = [
     "hiccl_default_layout",
     "hiccl_card_layout",
     "hiccl_raw_layout",
+    # Functional & re-frame & testing
+    "use_signal",
+    "reg_state",
+    "reg_sub",
+    "reg_event",
+    "subscribe",
+    "dispatch",
 ]

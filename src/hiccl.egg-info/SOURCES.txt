@@ -1,3 +1,4 @@
+README.en.md
 README.md
 pyproject.toml
 src/hiccl/__init__.py
@@ -8,6 +9,7 @@ src/hiccl/diff.py
 src/hiccl/eventbus.py
 src/hiccl/hiccup.py
 src/hiccl/html.py
+src/hiccl/re_frame.py
 src/hiccl/registry.py
 src/hiccl/renderer.py
 src/hiccl/router.py
@@ -16,6 +18,7 @@ src/hiccl/session.py
 src/hiccl/session_store.py
 src/hiccl/signal.py
 src/hiccl/spec.py
+src/hiccl/testing.py
 src/hiccl/validator.py
 src/hiccl.egg-info/PKG-INFO
 src/hiccl.egg-info/SOURCES.txt
@@ -48,6 +51,7 @@ tests/test_hiccup.py
 tests/test_offline_mode.py
 tests/test_phase1.py
 tests/test_phase2.py
+tests/test_phase3.py
 tests/test_redis_store.py
 tests/test_registry.py
 tests/test_renderer.py

@@ -74,6 +74,15 @@ async def hiccl_sse(
     config = hiccl_state.get("config") if isinstance(hiccl_state, dict) else None
     coalesce_ms = getattr(config, "scheduler_coalesce_ms", 0.0) if config else 0.0
     scheduler = RenderScheduler(coalesce_ms=coalesce_ms)
+
+    # Force a silent initial render of all mounted components that don't have active effects
+    # to register all reactive effects, subscription watches, and setup their dependency tracking
+    # while session.on_signal_change is STILL None. This prevents any render-phase signal modifications
+    # from triggering recursive dirty marking or infinite scheduler loops.
+    for comp in list(session._components.values()):
+        if not comp._effects:
+            session.renderer.render_component(comp)
+
     session.on_signal_change = scheduler.mark_dirty
 
     async def render_fn(dirty_ids: set[str]) -> list[dict]:

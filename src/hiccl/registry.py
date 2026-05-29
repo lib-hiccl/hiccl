@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
 from hiccl.component import Component
 
 
@@ -35,13 +37,28 @@ def set_registry(registry: ComponentRegistry) -> None:
     _registry = registry
 
 
-def component(name: str):
-    """Decorator: register a class as a named component."""
+def component(arg: str | Callable | None = None) -> Any:
+    """Unified decorator to register a component (class or pure function)."""
+    if callable(arg):
+        # Direct function decorator: @component def my_func(...)
+        from hiccl.component import _make_func_component
 
-    def wrapper(cls):
-        if _registry is not None:
-            _registry.register(name, cls)
-        cls._hiccl_component_name = name  # type: ignore[attr-defined]
-        return cls
+        return _make_func_component(arg.__name__.lower(), arg)
 
-    return wrapper
+    # Factory decorator: @component("my-name") or @component()
+    name = arg
+
+    def decorator(cls_or_fn: Any) -> Any:
+        if isinstance(cls_or_fn, type) and issubclass(cls_or_fn, Component):
+            if _registry is not None and name is not None:
+                _registry.register(name, cls_or_fn)
+            if name is not None:
+                cls_or_fn._hiccl_component_name = name
+            return cls_or_fn
+        else:
+            from hiccl.component import _make_func_component
+
+            actual_name = name or cls_or_fn.__name__.lower()
+            return _make_func_component(actual_name, cls_or_fn)
+
+    return decorator

@@ -179,8 +179,9 @@ class HiccupRenderer:
         if tag in ("__raw__", "__fragment__"):
             return False, ""
 
-        attrs = node[1] if len(node) > 1 else None
-        children = node[2:] if len(node) > 2 else []
+        has_attrs = len(node) > 1 and (isinstance(node[1], dict) or node[1] is None)
+        attrs = node[1] if (has_attrs and isinstance(node[1], dict)) else None
+        children = node[2:] if has_attrs else node[1:]
 
         if attrs and isinstance(attrs, dict):
             for v in attrs.values():
@@ -233,8 +234,9 @@ class HiccupRenderer:
             return "".join(self.render(c) for c in children)
 
         # Normal tag: [tag_name, attrs_or_None, *children]
-        attrs = node[1] if len(node) > 1 else None
-        children = node[2:] if len(node) > 2 else []
+        has_attrs = len(node) > 1 and (isinstance(node[1], dict) or node[1] is None)
+        attrs = node[1] if (has_attrs and isinstance(node[1], dict)) else None
+        children = node[2:] if has_attrs else node[1:]
 
         attrs_html = self._render_attrs(attrs) if attrs else ""
         children_html = "".join(self.render(c) for c in children)
@@ -263,12 +265,31 @@ class HiccupRenderer:
         """Render a component: render() → autobind → inject id → serialize."""
         # Clear the static node cache for this render cycle to prevent object id reuse issues
         self._static_cache.clear()
+
+        # Set current session context
+        session = getattr(component, "_session", None)
+        token_session = None
+        if session:
+            from hiccl.re_frame import _current_session
+
+            token_session = _current_session.set(session)
+
+        # Set current rendering component context
+        from hiccl.component import _current_rendering_component
+
+        token_comp = _current_rendering_component.set(component)
+
         # Set render context so @server methods return ActionRefs
         token = _in_render.set(True)
         try:
             hiccup = component.render()
         finally:
             _in_render.reset(token)
+            _current_rendering_component.reset(token_comp)
+            if token_session is not None:
+                from hiccl.re_frame import _current_session
+
+                _current_session.reset(token_session)
 
         # Convert on_* ActionRefs to htmx attributes
         hiccup = autobind(hiccup, component)
@@ -285,9 +306,10 @@ class HiccupRenderer:
                 # Merge id into existing attrs (copy to avoid mutation)
                 merged_attrs = {**hiccup[1], "id": component.component_id}
                 new_hiccup = [tag, merged_attrs] + hiccup[2:]
-            else:
-                # No attrs dict: insert one with just id, skip the None placeholder
+            elif len(hiccup) > 1 and hiccup[1] is None:
                 new_hiccup = [tag, {"id": component.component_id}] + hiccup[2:]
+            else:
+                new_hiccup = [tag, {"id": component.component_id}] + hiccup[1:]
             return self.render(new_hiccup)
 
         # Fallback: wrap in container div
@@ -296,7 +318,10 @@ class HiccupRenderer:
 
     def render_component_cached(self, component: Component) -> str | None:
         """Cache-render: returns None if signal versions unchanged (no re-render needed)."""
-        total_version = sum(s._version for s in component._signals.values())
+        subs_signals = getattr(component, "_watched_subs_signals", [])
+        total_version = sum(s._version for s in component._signals.values()) + sum(
+            s._version for s in subs_signals
+        )
         cached = self._cache.get(component.component_id)
         if cached and cached[0] == total_version:
             return None

@@ -1,12 +1,13 @@
 Metadata-Version: 2.4
 Name: hiccl
-Version: 0.2.0
+Version: 0.3.0
 Summary: Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State
 Author: Hiccl Contributors
 License-Expression: MIT
 Project-URL: Documentation, https://github.com/shiunko/hiccl
 Project-URL: Repository, https://github.com/shiunko/hiccl
 Requires-Python: >=3.11
+Description-Content-Type: text/markdown
 Requires-Dist: fastapi>=0.110.0
 Requires-Dist: python-multipart>=0.0.6
 Requires-Dist: watchfiles>=1.2.0
@@ -14,3 +15,288 @@ Provides-Extra: full
 Requires-Dist: redis>=5.0.0; extra == "full"
 Requires-Dist: msgpack>=1.0.0; extra == "full"
 Requires-Dist: orjson>=3.9.0; extra == "full"
+
+# Hiccl — Full-Stack Reactive Web Framework for Python 🧪🥒
+
+<p align="center">
+  <a href="README.md">简体中文</a> • <strong>English</strong>
+</p>
+
+<p align="center">
+    <a href="https://zread.ai/shiunko/hiccl" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=for-the-badge&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
+</p>
+
+<p align="center">
+  <strong>Modern Web Framework Combining Clojure's Hiccup DSL with Pythonic Reactive State Serialization</strong>
+</p>
+
+<p align="center">
+  <a href="#-philosophy">Philosophy</a> •
+  <a href="#-key-features">Key Features</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-offline-readiness">Offline Readiness</a> •
+  <a href="#-development--contribution-guide">Development & Contribution</a>
+</p>
+
+> [!TIP]
+> **Read this repository with Zread AI Assistant**:
+> Readers can click the **Ask Zread** badge above to ask any questions about the `hiccl` architecture or implementation details directly. It helps onboard contributors faster, answers reader queries, and keeps issues clean!
+
+---
+
+## 🎨 Philosophy & Naming
+
+**Hiccl** (pronounced `/ˈhɪk.l̩/` or "Hick-le") is the harmonic crystallization of **Hiccup** and **Pickle**:
+
+*   **Hiccup**: Drawing pure lineage from Clojure. In Hiccl, you completely bypass writing boilerplate HTML strings. Your entire DOM structure is expressively built using elegant, nested Python data structures and lists.
+*   **Pickle**: Exuding deep Pythonic roots. Represents automatic component state (State/Signal) tracking and session-based lifecycle serialization. States flow automatically through WebSockets or SSE via minimal reactive virtual-DOM diff patches.
+
+**Hiccl** bridges the declarative simplicity of Clojure's UI design with Pythonic full-stack reactivity atop a high-performance FastAPI/Starlette server!
+
+---
+
+## ⚡️ Key Features
+
+*   **⚡️ 100% Declarative Components**: Describe your UI using only nested Python lists. The framework auto-binds events (like `on_click`) into seamless server-side methods with zero boilerplate AJAX or fetch glue code.
+*   **🔌 Reactive State & Elegant Factories**: Powered by native `Signal` (`signal`), `ComputedSignal` (`computed`), and `Effect` (`effect`) primitives, as well as `batch` transaction support. State mutations trigger automatic virtual-DOM diffing, pushing minimal HTML patches via WebSockets/SSE to the client instantly.
+*   **🛡️ Runtime `hiccl.spec` Contract Security**: Implements Clojure-like declarative data contracts to guard `@server` method boundaries. Provides structured `explain_data` errors, enabling AI agents to engage in excellent error introspection and self-healing.
+*   **🔐 Production Redis Store & Locks**: `RedisSessionStore` supports ConnectionPool and exponential-backoff retries. Serializes data using Base64+Msgpack with elegant fallback; integrates a pessimistic distributed lock mechanism to avoid concurrent state overwrites.
+*   **🔀 MQTT Wildcard EventBus**: `EventBus` natively supports hierarchical wildcard subscriptions (`*` for single level, `#` for zero or more levels) matching with high-performance regex compilation cache routing.
+*   **🎨 Built-in DaisyUI & TailwindCSS**: Ships with integrated premium dark-mode glassmorphic components (DaisyUI) and utility-first styling (TailwindCSS) to build stunning user interfaces out-of-the-box.
+*   **🌿 Client-Side Acceleration with Alpine.js**: Bypasses verbose custom scripts in favor of Alpine.js, permitting high-frequency client-side interactions (like 60fps local ticking clocks and real-time clock skew calculation) defined as native attributes.
+*   **📦 100% Offline & Air-Gapped Ready**: All critical static assets (`tailwind.js`, `daisyui.css`, `alpine.js`, `htmx.js`) are fully hosted locally in the `static/` folder. Build and deploy fast reactive applications in completely disconnected physical networks.
+*   **🔀 Elegant Auto-Menu Component Routing**: Declare routes effortlessly using `pages=menu(Counter, TwoClocks, ChatRoom)`. Hiccl automatically generates kebab-case path endpoints and a premium glassmorphic navigation header.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Minimal Counter Component (`examples/counter/app.py`)
+
+Hiccl components are clean, structural, and free of clutter:
+
+```python
+from hiccl import (
+    Component,
+    ComponentRegistry,
+    HicclConfig,  # Config remains clean and generic
+    create_hiccl_app,
+    menu,
+    server,
+    signal,
+)
+from hiccl.hiccup import button, div, h2
+
+registry = ComponentRegistry()
+
+
+class Counter(Component):
+    """A minimal reactive counter."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.count = signal(0)
+
+    @server
+    def increment(self, step: int = 1):
+        if isinstance(step, str):
+            step = int(step)
+        self.count.set(self.count.get() + step)
+
+    @server
+    def decrement(self, step: int = 1):
+        if isinstance(step, str):
+            step = int(step)
+        self.count.set(self.count.get() - step)
+
+    @server
+    def reset(self):
+        self.count.set(0)
+
+    def render(self):
+        count = self.count.get()
+        return div(
+            {"class": "card w-96 bg-base-200 shadow-xl border border-base-300 mx-auto"},
+            div(
+                {"class": "card-body items-center text-center"},
+                h2(
+                    {"class": "card-title text-3xl font-extrabold mb-4"},
+                    f"Count: {count}",
+                ),
+                div(
+                    {"class": "card-actions justify-center gap-2"},
+                    button(
+                        {
+                            "class": "btn btn-outline btn-error",
+                            "on_click": self.decrement(5),
+                        },
+                        "-5",
+                    ),
+                    button(
+                        {"class": "btn btn-error", "on_click": self.decrement(1)}, "-1"
+                    ),
+                    button(
+                        {"class": "btn btn-neutral", "on_click": self.reset}, "Reset"
+                    ),
+                    button(
+                        {"class": "btn btn-success", "on_click": self.increment(1)},
+                        "+1",
+                    ),
+                    button(
+                        {
+                            "class": "btn btn-outline btn-success",
+                            "on_click": self.increment(5),
+                        },
+                        "+5",
+                    ),
+                ),
+            ),
+        )
+
+
+# Route and mount the component instantly!
+app = create_hiccl_app(HicclConfig(component_registry=registry, pages=menu(Counter)))
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+### 2. ⚡️ Instant Development Mode (HMR & hREPL)
+
+Hiccl offers a powerful **Developer Mode Twin Engine** engineered specifically for the AI era and maximum DX: state-preserving DOM-level HMR (Hot Module Replacement) and a non-blocking hREPL network socket server.
+
+#### 🚀 Launching the Dev Server
+Use the new `hiccl` CLI tool to spin up your local app instantly with hot-reloading and REPL support:
+```bash
+uv run hiccl dev examples.combined_app:app --live-reload --hrepl
+```
+
+*   **`--live-reload`**: Activates **state-preserving** DOM-level Hot Module Replacement (HMR). Whenever you modify and save any `.py` component code, Hiccl reloads the module, updates the ComponentRegistry, and calculates the minimal DOM patches via the DiffEngine — **100% preserving all in-memory live Signal values** in active sessions, and updating the browser in less than a second without page refreshes.
+*   **`--hrepl`**: Launches the interactive network REPL server on `127.0.0.1:8998` (default).
+    *   **Security Architecture**: Bound to localhost by default, generating a random **32-character authentication Token** on start (overridable via `HREPL_TOKEN` env var). All transactions are written securely to `.hrepl_audit.log` in the workspace.
+    *   **Remote Surgery Evaluation**: Operates over standard JSON-RPC. Developers or **AI Agents** can open TCP socket connections to evaluate complex multi-line and async statements containing `await`, allowing them to inspect live `Session` instances, probe Signals, and live-patch class methods on a hot, active server.
+
+---
+
+## 🛠 Architecture
+
+Hiccl separates concerns cleanly to maintain high-throughput bidirectional reactive sync:
+
+```mermaid
+graph TD
+    Client[Browser / Client] -->|htmx / WebSockets| Server[FastAPI / Starlette Backend]
+    Server -->|Session Management| SessionStore[State Serialization / Persistence]
+    SessionStore -->|Mount & Render| VDOM[Hiccup VDOM Tree]
+    VDOM -->|Signal Trigger| DiffEngine[Minimal Diff Engine]
+    DiffEngine -->|HTML Patches| WSChannel[WebSocket Push Channel]
+    WSChannel -->|OuterHTML DOM Swap| Client
+```
+
+1.  **Hiccup UI Engine**: Translates nested Python arrays into HTML. Server actions annotated with `@server` are captured and serialized as network actions.
+2.  **Diff Engine**: Any state mutation triggers localized dirty-checking and re-renders only the changed node, calculating the minimum HTML delta to push to the client.
+3.  **Local State Transportation Layer**: Orchestrates low-latency updates via WebSockets and Server-Sent Events (SSE).
+
+---
+
+## 🤖 Why Hiccl is Natural-Born for the AI Era?
+
+With AI Agents (like Antigravity) and Copilots becoming core drivers of development velocity, **the traditional decoupled frontend/backend (React/Vue + REST API + Backend) paradigm has become a heavy cognitive tax for LLMs**. Hiccl bypasses this entirely:
+
+1. **🧩 Single-Language & Unified Mental Model**:
+   - Eliminates constant context-switching between TypeScript (client) and Python (server).
+   - The entire application (UI layout, reactive state, server-side events) is written 100% in declarative Python. AI only needs to reason in one programming language and one paradigm.
+
+2. **🔌 Zero API Glue Code, Eliminating Integration Hallucinations**:
+   - Bypasses writing REST/GraphQL endpoints, Pydantic schemas, Axios hooks, or client-side Redux/Pinia stores.
+   - The AI simply mutates state via `self.count.set(...)` — synchronization is handled transparently. This completely eradicates integration bugs and AI schema mismatch failures.
+
+3. **🌿 UI as Pure Python Data Structures (Hiccup)**:
+   - Defining DOM using native nested lists and tag functions prevents malformed, unclosed tags typical in raw HTML/JSX generation.
+   - LLMs excel at generating structured nested arrays. Combined with `mypy` / `pyright`, the entire UI is type-safe and statically verifiable in milliseconds, allowing rapid AI self-correction.
+
+4. **⚡ Blazing Fast Testing & Self-Healing Loops**:
+   - Zero Webpack/Vite build steps to wait for.
+   - Hiccl components can run end-to-end assertions in pure Python memory (over **140 tests in just 0.3 seconds!**). This sub-second feedback loop enables AI agents to execute dozens of test-and-repair iterations in seconds.
+
+---
+
+## 📦 Offline Readiness
+
+Hiccl is designed for secure, air-gapped internal networks. Run our combined 3-in-1 application to test the full potential of offline menu routing:
+
+```bash
+# Launch the air-gapped demo combining Counter, TwoClocks and ChatRoom
+python3 examples/combined_app.py
+```
+
+### Try These Highlights:
+1.  **DaisyUI Chat Bubbles**: Navigate to `/chat-room` to test a beautiful multi-user chat room synchronized in real-time across browser tabs.
+2.  **DaisyUI Stats**: Navigate to `/two-clocks` to view Alpine-powered ticking clocks with live server-client time skew metrics.
+3.  **Physical Disconnection**: Disconnect your internet connection completely. The application remains fully functional, navigating and rendering flawlessly with locally-hosted scripts.
+
+---
+
+## 🛠️ Development & Contribution Guide
+
+We warmly welcome and appreciate contributions from the community! To maintain pristine code quality, consistency, and velocity, please install our modern toolchain and adhere to the guidelines below before creating a Pull Request.
+
+### 📦 1. Toolchain Management with `mise`
+
+This project leverages [**mise**](https://mise.jdx.dev/) for polyglot environment management and tasks automation. It is a modern, faster, and more robust alternative to traditional environment and script tools.
+
+#### **Why mise?**
+*   **Unified Environments**: It automatically pins and installs the precise versions of Python, Ruff, and uv configured in `mise.toml` and `pyproject.toml` when you enter the project directory.
+*   **Declarative Task Runner**: Bypasses typing out lengthy terminal scripts by providing simple alias commands under `mise run <task>`.
+
+#### **Quick Installation & Setup**
+1.  **Install mise**:
+    *   **macOS** (Homebrew): `brew install mise`
+    *   **Universal Script**: `curl https://mise.jdx.dev/install.sh | sh`
+2.  **Trust & Activate the Project**:
+    In the root directory of the project, run:
+    ```bash
+    mise trust
+    ```
+    *(Alternatively, you can activate mise in your terminal shell with `eval "$(mise activate bash)"` or your respective shell configuration for automatic activation.)*
+
+---
+
+### 🚀 2. Everyday Development Tasks
+
+Once `mise` is activated, you can execute these highly optimized tasks from your terminal:
+
+| Command | Task Description | Underlying Process |
+| :--- | :--- | :--- |
+| **`mise run lint`** | **Run Static Linter**. Inspects the codebase using Ruff check for potential errors. | `ruff check` |
+| **`mise run format`** | **Code Formatter**. Automatically formats code style, indentation, and structure. | `ruff format` |
+| **`mise run test`** | **Run Unit Tests**. Runs 140+ highly optimized unit tests in milliseconds using Pytest. | `uv run -m pytest` |
+| **`mise run build`** | **Build Packages**. Builds the source and wheel distribution artifacts. | `uv run -m build` |
+| **`mise run check`** | **Pre-publish Validation**. Validates distribution metadata for PyPI using Twine. | `uv run -m twine check dist/*` |
+
+> [!TIP]
+> You can run `mise tasks` to list all available tasks and their descriptions at any time.
+
+---
+
+### 🤝 3. Contribution Rules (Golden Rules)
+
+Before submitting any Pull Request (PR), please verify that your changes adhere to these strict quality standards:
+
+1.  **Linter Passes Cleanly**:
+    Run `mise run lint`. There must be zero linting violations or warnings.
+2.  **Formatter Adheres Completely**:
+    Run `mise run format` to automatically format all files. No code modifications should deviate from the configured Ruff format settings.
+3.  **100% Unit Test Pass Rate**:
+    Run `mise run test`. **Every single test case must pass without exceptions or failures.** Thanks to the high-efficiency architecture, all 140+ tests execute in less than 0.5s!
+
+> [!IMPORTANT]
+> The project CI executes strict formatting, linting, and pytest suites on every PR. Any failure in these stages will block merging. Please run these check tasks locally before committing and pushing.
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE).

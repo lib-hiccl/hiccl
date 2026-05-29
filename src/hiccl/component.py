@@ -306,3 +306,124 @@ class Component:
     def action_url(self, method_name: str) -> str:
         """Return the URL for triggering a server action via HTTP."""
         return f"/hiccl/action/{self.component_id}/{method_name}"
+
+
+# ---------------------------------------------------------------------------
+# Functional component primitives (use_signal, _make_func_component)
+# ---------------------------------------------------------------------------
+
+_current_rendering_component: ContextVar[Component | None] = ContextVar(
+    "_current_rendering_component", default=None
+)
+
+
+def use_signal(initial: Any) -> Signal[Any]:
+    """React-Hooks style local state hook for functional components."""
+    comp = _current_rendering_component.get()
+    if comp is None:
+        raise RuntimeError(
+            "use_signal can only be called inside a functional component during render"
+        )
+
+    idx = comp._hook_index
+    comp._hook_index += 1
+
+    if idx not in comp._hook_signals:
+        from hiccl.signal import Effect  # local import to avoid cycles if any
+
+        sig = Signal(initial)
+        comp._hook_signals[idx] = sig
+        comp._signals[f"hook_{idx}"] = sig
+
+        # Automatically register watch effect if component is already mounted
+        session = getattr(comp, "_session", None)
+        if session:
+
+            def make_effect(signal_obj, comp_id):
+                def watch():
+                    signal_obj.get()
+                    if session.on_signal_change:
+                        session.on_signal_change(comp_id)
+
+                return watch
+
+            effect = Effect(make_effect(sig, comp.component_id))
+            comp._effects.append(effect)
+
+    return comp._hook_signals[idx]
+
+
+def _make_func_component(name: str, fn: Callable) -> type[Component]:
+    """Wrap a pure function in a FuncComponent (Component subclass) adapter."""
+
+    class FuncComponent(Component):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            super().__init__()
+            self._args = args
+            self._kwargs = kwargs
+            self._hook_index = 0
+            self._hook_signals: dict[int, Signal[Any]] = {}
+            self._fn = fn
+
+            # Map positional and keyword args to the function's signature
+            try:
+                sig = inspect.signature(fn)
+                bound = sig.bind_partial(*args, **kwargs)
+                bound.apply_defaults()
+                self._bound_props = bound.arguments
+            except Exception:
+                self._bound_props = kwargs.copy()
+
+            self._discovered_signals()
+
+        def _discovered_signals(self) -> None:
+            super()._discovered_signals()
+            # Sync bound props with any attributes set by pending props (e.g. from session)
+            for k in list(self._bound_props.keys()):
+                if hasattr(self, k):
+                    val = getattr(self, k)
+                    self._bound_props[k] = val
+                    if isinstance(val, Signal):
+                        self._signals[k] = val
+
+        def render(self) -> Any:
+            self._hook_index = 0
+            token = _current_rendering_component.set(self)
+            try:
+                return self._fn(**self._bound_props)
+            finally:
+                _current_rendering_component.reset(token)
+
+        @server
+        def _dispatch_event(
+            self, event_name: str, event_args: list | tuple = (), **kwargs: Any
+        ) -> None:
+            from hiccl.re_frame import dispatch
+            from hiccl.spec import SpecValidationError
+
+            actual_args = list(event_args)
+            if kwargs:
+                clean_kwargs = {
+                    k: v
+                    for k, v in kwargs.items()
+                    if not k.startswith("hx-") and k not in ("event_name", "event_args")
+                }
+                actual_args.extend(clean_kwargs.values())
+                self._submitted_values = clean_kwargs
+
+            try:
+                dispatch(event_name, *actual_args)
+                self._last_spec_error = None
+            except SpecValidationError as e:
+                self._last_spec_error = e.explain_data[0]["pred"]
+
+    FuncComponent.__name__ = fn.__name__
+    FuncComponent.__doc__ = fn.__doc__
+    FuncComponent._hiccl_component_name = name
+
+    from hiccl.registry import _registry
+
+    if _registry is not None:
+        _registry.register(name, FuncComponent)
+
+    return FuncComponent

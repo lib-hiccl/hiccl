@@ -1,6 +1,5 @@
 """Tests for hiccl.router — Declarative Signal-driven Router."""
 
-import pytest
 from hiccl.component import Component
 from hiccl.renderer import HiccupRenderer
 from hiccl.router import Router
@@ -20,7 +19,7 @@ def test_router_declarative_routing():
     routes = {
         "/": HomeView,
         "/about": AboutView,
-        "/static-raw": lambda: ["p", None, "Static Callback HTML"]
+        "/static-raw": lambda: ["p", None, "Static Callback HTML"],
     }
 
     # 1. Initialize router at "/"

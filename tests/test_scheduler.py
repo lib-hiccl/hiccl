@@ -99,7 +99,9 @@ class TestRenderScheduler:
             await scheduler.stop()
 
         # Check that the exception was caught and logged
-        assert any("Error during scheduler tick" in record.message for record in caplog.records)
+        assert any(
+            "Error during scheduler tick" in record.message for record in caplog.records
+        )
         assert any(record.levelname == "ERROR" for record in caplog.records)
 
     async def test_scheduler_coalescing(self):

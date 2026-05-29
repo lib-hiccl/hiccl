@@ -17,7 +17,7 @@ class Router(Component):
         self,
         routes: dict[str, type[Component] | Callable[[], Any]],
         initial_path: str = "/",
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.routes = routes
@@ -40,7 +40,9 @@ class Router(Component):
         target = self.routes.get(path)
         if target is None:
             # Look for fallback
-            target = self.routes.get("/") or (lambda: ["div", None, "404 Page Not Found"])
+            target = self.routes.get("/") or (
+                lambda: ["div", None, "404 Page Not Found"]
+            )
 
         # If target is a subclass of Component, mount/instantiate it
         if isinstance(target, type) and issubclass(target, Component):
@@ -48,7 +50,12 @@ class Router(Component):
             comp_name = getattr(comp_class, "_hiccl_component_name", None)
             if not comp_name:
                 import re
-                comp_name = re.sub(r"(?<!^)(?=[A-Z])", "-", comp_class.__name__).strip("-").lower()
+
+                comp_name = (
+                    re.sub(r"(?<!^)(?=[A-Z])", "-", comp_class.__name__)
+                    .strip("-")
+                    .lower()
+                )
                 comp_class._hiccl_component_name = comp_name
 
             cid = f"router-sub-{comp_name}"
@@ -68,7 +75,7 @@ class Router(Component):
                 return [
                     "__fragment__",
                     None,
-                    ["__raw__", None, session.renderer.render_component(sub_comp)]
+                    ["__raw__", None, session.renderer.render_component(sub_comp)],
                 ]
             else:
                 # Standalone fallback context (for isolated unit tests)

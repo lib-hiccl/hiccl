@@ -46,6 +46,7 @@ def required(message: str = "This field is required.") -> Callable[[Any], str | 
         if isinstance(val, str) and not val.strip():
             return message
         return None
+
     return rule
 
 
@@ -59,6 +60,7 @@ def min_length(limit: int, message: str | None = None) -> Callable[[Any], str | 
         if len(str(val)) < limit:
             return msg
         return None
+
     return rule
 
 
@@ -71,4 +73,5 @@ def email(message: str = "Invalid email address.") -> Callable[[Any], str | None
         if not pattern.match(str(val)):
             return message
         return None
+
     return rule

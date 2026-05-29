@@ -42,7 +42,9 @@ class SSETransport:
 async def get_session_sse(session_id: str, request: Request):
     """Dependency: look up session from URL path."""
     hiccl_state = getattr(request.app.state, "hiccl", {})
-    session_store = hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
+    session_store = (
+        hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
+    )
 
     session = await session_store.get(session_id) if session_store else None
     if session is None:
@@ -51,7 +53,9 @@ async def get_session_sse(session_id: str, request: Request):
 
 
 @router.get("/hiccl/sse/{session_id}")
-async def hiccl_sse(session_id: str, request: Request, session=Depends(get_session_sse)):
+async def hiccl_sse(
+    session_id: str, request: Request, session=Depends(get_session_sse)
+):
     """SSE endpoint — streams component updates to the client.
 
     Flow:

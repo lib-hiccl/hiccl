@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from hiccl.session import Session
@@ -47,6 +47,7 @@ class MemorySessionStore(SessionStore):
 
     def __init__(self) -> None:
         from hiccl.session import _sessions
+
         self._sessions = _sessions
         self._lock = asyncio.Lock()
 
@@ -73,6 +74,7 @@ class MemorySessionStore(SessionStore):
 
     async def sweep_expired(self, max_age: float) -> list[str]:
         import time
+
         evicted = []
         async with self._lock:
             now = time.time()
@@ -132,6 +134,7 @@ class RedisSessionStore(SessionStore):
         else:
             try:
                 import redis
+
                 self._redis = redis.from_url(redis_url, decode_responses=True)
                 self._redis.ping()
             except Exception:
@@ -209,16 +212,15 @@ class RedisSessionStore(SessionStore):
             return
 
         import json
+
         components_list = []
         signals_data = {}
 
         for cid, comp in session._components.items():
-            comp_name = getattr(comp, "_hiccl_component_name", comp.__class__.__name__.lower())
-            components_list.append({
-                "name": comp_name,
-                "cid": cid,
-                "props": {}
-            })
+            comp_name = getattr(
+                comp, "_hiccl_component_name", comp.__class__.__name__.lower()
+            )
+            components_list.append({"name": comp_name, "cid": cid, "props": {}})
 
             comp_signals = {}
             for sig_name, sig in comp._signals.items():
@@ -228,7 +230,7 @@ class RedisSessionStore(SessionStore):
         meta_data = {
             "session_id": session.session_id,
             "components": components_list,
-            "last_accessed": session.last_accessed
+            "last_accessed": session.last_accessed,
         }
 
         meta_key = f"hiccl:session:{session.session_id}:meta"

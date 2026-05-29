@@ -57,7 +57,9 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
     await websocket.accept()
 
     hiccl_state = getattr(websocket.app.state, "hiccl", {})
-    session_store = hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
+    session_store = (
+        hiccl_state.get("session_store") if isinstance(hiccl_state, dict) else None
+    )
     session = await session_store.get(session_id) if session_store else None
 
     if session is None:

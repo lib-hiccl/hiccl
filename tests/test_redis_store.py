@@ -1,7 +1,6 @@
 """Tests for hiccl.session_store — RedisSessionStore with Rehydration workflow."""
 
 import pytest
-import asyncio
 from hiccl.component import Component
 from hiccl.signal import Signal
 from hiccl.registry import ComponentRegistry
@@ -37,17 +36,17 @@ async def test_redis_session_store_rehydration():
     # 3. Create active session and mutate state
     session_id = "test-rehydrate-session-id"
     session = Session(session_id, registry, renderer)
-    
+
     comp = session.mount_component("simple-counter", cid="counter-xyz")
     assert comp.count.get() == 0
-    
+
     # Mutate state (increment counter to 12)
     comp.count.set(12)
     assert comp.count.get() == 12
 
     # 4. Save session to store (persists meta & signals to DummyRedisClient)
     await store.save(session)
-    
+
     # Verify metadata & signals were exported in dummy store
     meta_key = f"hiccl:session:{session_id}:meta"
     signals_key = f"hiccl:session:{session_id}:signals"

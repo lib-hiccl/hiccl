@@ -4,20 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-logger = logging.getLogger("hiccl.app")
-
-from fastapi import FastAPI, Request, Depends
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from hiccl.session_store import SessionStore, MemorySessionStore
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
+from hiccl.session_store import MemorySessionStore, SessionStore
+
+logger = logging.getLogger("hiccl.app")
 
 if TYPE_CHECKING:
     from hiccl.component import Component
@@ -221,7 +220,9 @@ class HicclConfig:
     layout: Callable[[Request, str, str, HicclConfig], str] = hiccl_default_layout
 
 
-async def _session_eviction_loop(session_store: SessionStore, interval: float, max_age: float) -> None:
+async def _session_eviction_loop(
+    session_store: SessionStore, interval: float, max_age: float
+) -> None:
     """Periodically sweep and dispose of expired sessions."""
     while True:
         try:

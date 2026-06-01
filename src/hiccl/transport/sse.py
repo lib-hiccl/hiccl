@@ -83,7 +83,12 @@ async def hiccl_sse(
         if not comp._effects:
             session.renderer.render_component(comp)
 
-    session.on_signal_change = scheduler.mark_dirty
+    def wrap_mark_dirty(comp_id: str) -> None:
+        scheduler.mark_dirty(comp_id)
+        if comp_id != "time-travel-panel-main" and session.get_component("time-travel-panel-main"):
+            scheduler.mark_dirty("time-travel-panel-main")
+
+    session.on_signal_change = wrap_mark_dirty
 
     async def render_fn(dirty_ids: set[str]) -> list[dict]:
         patches = []

@@ -417,6 +417,17 @@ def _register_page_routes(app: FastAPI, config: HicclConfig) -> None:
 
                 comp_html = session.renderer.render_component(comp)
 
+                # Auto-inject TimeTravelPanel for local development state tracing
+                if config.live_reload or config.hrepl_enabled:
+                    from hiccl.live_reload.time_travel import TimeTravelPanel
+
+                    debug_cid = "time-travel-panel-main"
+                    debug_comp = session.get_component(debug_cid)
+                    if debug_comp is None:
+                        debug_comp = session.mount_component("time-travel-panel", cid=debug_cid)
+                    debug_html = session.renderer.render_component(debug_comp)
+                    comp_html += debug_html
+
                 # Generate the navigation menu using DaisyUI navbar
                 menu_html = ""
                 if config.pages:

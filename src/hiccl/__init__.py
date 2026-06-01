@@ -50,7 +50,7 @@ from hiccl.registry import ComponentRegistry, component, set_registry
 from hiccl.renderer import HiccupRenderer, autobind
 from hiccl.scheduler import RenderScheduler
 from hiccl.session import Session
-from hiccl.signal import ComputedSignal, Effect, Signal, batch
+from hiccl.signal import ComputedSignal, Effect, Signal, batch, HistorySignal, signal_with_history
 from hiccl.transport.protocol import NullTransport, Transport
 from hiccl.diff import Diff, DiffEngine
 from hiccl.component import use_signal
@@ -67,6 +67,11 @@ from hiccl.transducers import (
 def signal(initial):
     """Create a new Signal with the given initial value."""
     return Signal(initial)
+
+
+def signal_with_history(initial, max_snapshots=50):
+    """Create a new HistorySignal with history tracking."""
+    return HistorySignal(initial, max_snapshots)
 
 
 _SENTINEL = object()
@@ -92,6 +97,8 @@ __all__ = [
     "Effect",
     "batch",
     "signal",
+    "HistorySignal",
+    "signal_with_history",
     "computed",
     "effect",
     # Hiccup DSL

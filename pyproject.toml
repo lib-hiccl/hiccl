@@ -1,6 +1,6 @@
 [project]
 name = "hiccl"
-version = "0.5.0"
+version = "0.6.0"
 description = "Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State"
 readme = "README.en.md"
 requires-python = ">=3.11"

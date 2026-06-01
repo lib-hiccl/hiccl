@@ -5,7 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
+import copy
 from typing import Any, Generic, TypeVar
+
+try:
+    import pyrsistent
+    HAS_PYRSISTENT = True
+except ImportError:
+    HAS_PYRSISTENT = False
 
 T = TypeVar("T")
 
@@ -105,6 +112,11 @@ class Signal(Generic[T]):
 
     def __repr__(self) -> str:
         return f"Signal({self._value!r})"
+
+    @classmethod
+    def with_history(cls, initial: T, max_snapshots: int = 50) -> HistorySignal[T]:
+        """Create a new HistorySignal with history tracking."""
+        return HistorySignal(initial, max_snapshots)
 
 
 # ---------------------------------------------------------------------------
@@ -239,3 +251,95 @@ class Effect:
         for dep in self._deps:
             dep._dependents.discard(self)
         self._deps.clear()
+
+
+# ---------------------------------------------------------------------------
+# HistorySignal & signal_with_history
+# ---------------------------------------------------------------------------
+
+
+class HistorySignal(Signal[T]):
+    """Signal with undo, redo and time travel capabilities."""
+
+    def __init__(self, initial: T, max_snapshots: int = 50) -> None:
+        self.max_snapshots = max_snapshots
+        frozen = self._freeze(initial)
+        self._history: list[T] = [frozen]
+        self._history_index: int = 0
+        super().__init__(frozen)
+
+    def _freeze(self, val: Any) -> Any:
+        if HAS_PYRSISTENT:
+            try:
+                return pyrsistent.freeze(val)
+            except Exception:
+                pass
+        return copy.deepcopy(val)
+
+    def set(self, value: T) -> None:
+        frozen = self._freeze(value)
+        if self._value == frozen:
+            return
+
+        # Truncate any redo history
+        self._history = self._history[: self._history_index + 1]
+        self._history.append(frozen)
+
+        # Enforce max snapshots limit
+        if len(self._history) > self.max_snapshots:
+            self._history.pop(0)
+
+        self._history_index = len(self._history) - 1
+        self._value = frozen
+        self._version += 1
+
+        for dep in list(self._dependents):
+            dep.invalidate()
+
+    def undo(self) -> None:
+        if not self.can_undo():
+            return
+        self._history_index -= 1
+        self._value = self._freeze(self._history[self._history_index])
+        self._version += 1
+        for dep in list(self._dependents):
+            dep.invalidate()
+
+    def redo(self) -> None:
+        if not self.can_redo():
+            return
+        self._history_index += 1
+        self._value = self._freeze(self._history[self._history_index])
+        self._version += 1
+        for dep in list(self._dependents):
+            dep.invalidate()
+
+    def can_undo(self) -> bool:
+        return self._history_index > 0
+
+    def can_redo(self) -> bool:
+        return self._history_index < len(self._history) - 1
+
+    def jump_to(self, index: int) -> None:
+        if index < 0 or index >= len(self._history):
+            raise IndexError("History index out of range")
+        if index == self._history_index:
+            return
+        self._history_index = index
+        self._value = self._freeze(self._history[self._history_index])
+        self._version += 1
+        for dep in list(self._dependents):
+            dep.invalidate()
+
+    @property
+    def history(self) -> list[T]:
+        return list(self._history)
+
+    @property
+    def history_index(self) -> int:
+        return self._history_index
+
+
+def signal_with_history(initial: T, max_snapshots: int = 50) -> HistorySignal[T]:
+    """Create a new HistorySignal with the given initial value and max snapshots."""
+    return HistorySignal(initial, max_snapshots)

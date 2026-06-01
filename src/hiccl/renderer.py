@@ -331,6 +331,10 @@ class HiccupRenderer:
         total_version = sum(s._version for s in component._signals.values()) + sum(
             s._version for s in subs_signals
         )
+        session = getattr(component, "_session", None)
+        if component.component_id == "time-travel-panel-main" and session:
+            total_version += sum(sig._version for sig in session._history_signals.values())
+
         cached = self._cache.get(component.component_id)
         if cached and cached[0] == total_version:
             return None

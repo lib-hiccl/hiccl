@@ -45,10 +45,13 @@ class Session:
 
         # Initialize re-frame states for this session
         import copy
-        from hiccl.signal import Signal
+        from hiccl.signal import HistorySignal
         from hiccl.re_frame import _re_frame_initial_state
 
-        self._re_frame_db = Signal(copy.deepcopy(_re_frame_initial_state))
+        self._re_frame_db = HistorySignal(copy.deepcopy(_re_frame_initial_state), max_snapshots=50)
+        self._history_signals: dict[str, HistorySignal] = {
+            "@re-frame-db": self._re_frame_db
+        }
         self._re_frame_subs: dict[Any, Any] = {}
 
         # EventBus integration
@@ -67,6 +70,7 @@ class Session:
         """Create and mount a component instance."""
         self.touch()
         from hiccl.re_frame import _current_session
+        from hiccl.signal import HistorySignal
 
         token = _current_session.set(self)
         try:
@@ -92,6 +96,10 @@ class Session:
         # Create effects that watch all component signals
         for sig_name in component._signals:
             sig = component._signals[sig_name]
+
+            if isinstance(sig, HistorySignal):
+                key = f"{component.component_id}.{sig_name}"
+                self._history_signals[key] = sig
 
             def make_effect(signal_obj, comp_id):
                 def watch():

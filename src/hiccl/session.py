@@ -66,7 +66,13 @@ class Session:
     ) -> Component:
         """Create and mount a component instance."""
         self.touch()
-        component = self._registry.create(name, **props)
+        from hiccl.re_frame import _current_session
+
+        token = _current_session.set(self)
+        try:
+            component = self._registry.create(name, **props)
+        finally:
+            _current_session.reset(token)
         if cid:
             component.component_id = cid
         self._components[component.component_id] = component

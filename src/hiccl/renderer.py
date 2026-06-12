@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
 import html as html_module
 import json
+from typing import Any
 
 from hiccl.component import ActionRef, Component, _in_render
+
 
 # Void elements (self-closing, no children)
 _VOID_ELEMENTS = frozenset(
@@ -337,9 +338,16 @@ class HiccupRenderer:
                 sig._version for sig in session._history_signals.values()
             )
 
-        cached = self._cache.get(component.component_id)
+        # Scope cache key by session to prevent cross-session cache poisoning
+        # when multiple sessions share the same component_id (e.g. "chat-room-main").
+        cache_key = (
+            f"{session.session_id}:{component.component_id}"
+            if session
+            else component.component_id
+        )
+        cached = self._cache.get(cache_key)
         if cached and cached[0] == total_version:
             return None
         rendered = self.render_component(component)
-        self._cache[component.component_id] = (total_version, rendered)
+        self._cache[cache_key] = (total_version, rendered)
         return rendered

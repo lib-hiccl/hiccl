@@ -14,21 +14,21 @@ import random
 from datetime import datetime
 
 from hiccl import (
+    Channel,
     Component,
     ComponentRegistry,
     HicclConfig,
+    LoadingTransducer,
+    SanitizingTransducer,
+    alts_,
     create_hiccl_app,
+    go,
     menu,
     server,
     signal,
-    Channel,
-    alts_,
-    go,
     timeout,
-    LoadingTransducer,
-    SanitizingTransducer,
 )
-from hiccl.hiccup import div, h1, h3, p, span, button, ul, li, form, input_, raw
+from hiccl.hiccup import button, div, form, h1, h3, input_, li, p, raw, span, ul
 
 
 # ---------------------------------------------------------------------------

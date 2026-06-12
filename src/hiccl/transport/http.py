@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import HTMLResponse
 
+
 router = APIRouter(prefix="/hiccl")
 
 
@@ -55,9 +56,9 @@ async def handle_action(
 ):
     """Handle an htmx AJAX action POST.
 
-    If the session has a connected push transport (WS/SSE), the rendered
-    HTML is pushed through that channel and we return an empty 200.
-    Otherwise (pure HTTP mode), the rendered HTML is returned directly.
+    Executes the @server method and returns the re-rendered component
+    HTML directly. The real-time transport (SSE/WS) handles pushing
+    updates to *other* sessions independently via EventBus broadcast.
     """
     component = session.get_component(component_id)
     if component is None:
@@ -87,10 +88,10 @@ async def handle_action(
     except Exception as e:
         return HTMLResponse(str(e), status_code=500)
 
-    # If a real-time transport is connected, the update is pushed there
-    if session.transport.is_connected():
-        return HTMLResponse("", status_code=200)
-
-    # Pure HTTP: return rendered HTML directly
-    html = session.renderer.render_component(component)
+    # Always return rendered HTML directly.
+    # Using render_component_cached to also update the renderer cache,
+    # so the SSE scheduler won't double-push the same content.
+    html = session.renderer.render_component_cached(component)
+    if html is None:
+        html = ""  # No change (should not happen after an action)
     return HTMLResponse(html)

@@ -13,9 +13,11 @@ from typing import TYPE_CHECKING
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
 from hiccl.registry import ComponentRegistry
 from hiccl.renderer import HiccupRenderer
 from hiccl.session_store import MemorySessionStore, SessionStore
+
 
 logger = logging.getLogger("hiccl.app")
 
@@ -208,7 +210,7 @@ class HicclConfig:
     session_max_age: float = 1800.0  # 30 minutes
     session_cleanup_interval: float = 60.0  # 1 minute
     pages: dict[str, type[Component]] | None = None
-    offline_mode: bool = False
+    offline_mode: bool = True
     scheduler_coalesce_ms: float = 0.0
     session_store: SessionStore | None = None
 
@@ -376,9 +378,11 @@ def create_hiccl_app(config: HicclConfig) -> FastAPI:
 
 
 def _register_page_routes(app: FastAPI, config: HicclConfig) -> None:
-    from fastapi.responses import HTMLResponse
-    from hiccl.transport.http import get_session
     import re
+
+    from fastapi.responses import HTMLResponse
+
+    from hiccl.transport.http import get_session
 
     if not config.pages:
         return

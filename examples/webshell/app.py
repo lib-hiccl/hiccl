@@ -16,7 +16,7 @@ Run:
     uv run hiccl dev examples.webshell.app:app
 
 Override the launched command with ``HICCL_SHELL_CMD="fish -l"``.
-The default is an isolated Docker container (debian:slim) — Docker must be
+The default is an isolated Docker container (debian:stable-slim) — Docker must be
 installed and the server user must be able to ``docker run``.
 """
 
@@ -35,6 +35,7 @@ import warnings
 
 from hiccl import Component, ComponentRegistry, HicclConfig, create_hiccl_app, menu
 from hiccl.hiccup import div, h2, p, raw, span
+from hiccl.signal import Signal
 from hiccl.transport.stream import StreamClosedError
 
 
@@ -68,7 +69,7 @@ def detect_command(container_label: str = "default") -> list[str]:
     """Pick the shell command to launch inside the PTY.
 
     Honors ``HICCL_SHELL_CMD``; otherwise launches an isolated Docker container
-    (debian:slim) hardened for public-internet deployment:
+    (debian:stable-slim) hardened for public-internet deployment:
 
     * ``--network none`` — complete network isolation
     * ``--memory 64m`` / ``--cpus 0.5`` — minimal resource footprint
@@ -129,7 +130,7 @@ def detect_command(container_label: str = "default") -> list[str]:
         f"hiccl.session={container_label}",
         "--user",
         "65534:65534",
-        "debian:slim",
+        "debian:stable-slim",
     ]
 
 
@@ -338,6 +339,7 @@ class WebShellComponent(Component):
         self._loop: asyncio.AbstractEventLoop | None = None
         self._read_queue: asyncio.Queue | None = None
         self._tasks: list[asyncio.Task] = []
+        self.pty_status = Signal("connecting")
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -346,6 +348,7 @@ class WebShellComponent(Component):
         self._teardown()
         self.stream = stream
         self._loop = asyncio.get_running_loop()
+        self.pty_status.set("connecting")
         try:
             self.pty = PtyProcess(
                 detect_command(container_label=self.component_id),
@@ -353,6 +356,7 @@ class WebShellComponent(Component):
             )
             self.pty.start()
         except Exception as exc:  # pragma: no cover - environment dependent
+            self.pty_status.set("closed")
             try:
                 await stream.send(
                     f"\r\n\x1b[31m*** failed to start shell: {exc} ***\x1b[0m\r\n".encode()
@@ -360,6 +364,7 @@ class WebShellComponent(Component):
             except Exception:
                 pass
             return
+        self.pty_status.set("live")
         self._read_queue = asyncio.Queue()
         self._loop.add_reader(self.pty.master_fd, self._on_pty_readable)
         self._tasks = [
@@ -370,6 +375,10 @@ class WebShellComponent(Component):
 
     def unmount(self) -> None:
         self._teardown()
+        if self.stream is not None and not self.stream.closed:
+            self.stream.close_sync()
+        self.stream = None
+        self._read_queue = None
         super().unmount()
 
     # -- byte pumps --------------------------------------------------------
@@ -437,6 +446,11 @@ class WebShellComponent(Component):
         except Exception:
             pass
         self._teardown()
+        self.pty_status.set("closed")
+        if self.stream is not None and not self.stream.closed:
+            await self.stream.close()
+        self.stream = None
+        self._read_queue = None
 
     def _teardown(self) -> None:
         for task in list(self._tasks):
@@ -450,18 +464,30 @@ class WebShellComponent(Component):
                     pass
             self.pty.kill()
             self.pty = None
-        if self.stream is not None and not self.stream.closed:
-            try:
-                self.stream.close_sync()
-            except Exception:
-                pass
-        self.stream = None
-        self._read_queue = None
 
     # -- view --------------------------------------------------------------
 
     def render(self):
         cid = self.component_id
+        status = self.pty_status.get()
+
+        if status == "live":
+            badge_status_class = "badge badge-success"
+            badge_status_dot = span(
+                {"class": "w-2 h-2 rounded-full bg-emerald-300 animate-pulse"}
+            )
+            badge_status_text = "live"
+        elif status == "connecting":
+            badge_status_class = "badge badge-warning"
+            badge_status_dot = span(
+                {"class": "w-2 h-2 rounded-full bg-amber-300 animate-pulse"}
+            )
+            badge_status_text = "connecting"
+        else:
+            badge_status_class = "badge badge-ghost"
+            badge_status_dot = ""
+            badge_status_text = "closed"
+
         return div(
             {
                 "class": "card bg-slate-900/90 border border-slate-700/50 backdrop-blur-xl shadow-2xl mx-auto w-full max-w-5xl"
@@ -488,14 +514,10 @@ class WebShellComponent(Component):
                     div(
                         {
                             "id": f"term-status-{cid}",
-                            "class": "badge badge-success gap-1 font-mono text-xs py-3",
+                            "class": f"{badge_status_class} gap-1 font-mono text-xs py-3",
                         },
-                        span(
-                            {
-                                "class": "w-2 h-2 rounded-full bg-emerald-300 animate-pulse"
-                            }
-                        ),
-                        "live",
+                        badge_status_dot,
+                        " " + badge_status_text,
                     ),
                 ),
                 div(
@@ -512,7 +534,7 @@ class WebShellComponent(Component):
                 ),
                 p(
                     {"class": "mt-3 text-xs text-slate-500"},
-                    "提示：默认运行于 Docker 沙箱 (debian:slim, 无网络, 64MB 内存限制)。支持 ANSI 颜色、行编辑、光标与窗口尺寸同步。输入 ",
+                    "提示：默认运行于 Docker 沙箱 (debian:stable-slim, 无网络, 64MB 内存限制)。支持 ANSI 颜色、行编辑、光标与窗口尺寸同步。输入 ",
                     span({"class": "font-mono text-slate-400"}, "exit"),
                     " 退出会关闭终端。",
                 ),

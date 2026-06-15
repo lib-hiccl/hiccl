@@ -5,6 +5,12 @@
 </p>
 
 <p align="center">
+  <a href="https://hiccl.dev/"><img src="https://img.shields.io/badge/Website-hiccl.dev-8b5cf6?style=for-the-badge&logo=svelte&logoColor=white" alt="Website"/></a>
+  <a href="https://github.com/lib-hiccl/hiccl"><img src="https://img.shields.io/badge/GitHub-lib--hiccl%2Fhiccl-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/></a>
+  <a href="https://pypi.org/project/hiccl/"><img src="https://img.shields.io/pypi/v/hiccl?style=for-the-badge&logo=pypi&logoColor=white&label=PyPI&color=3775A9" alt="PyPI"/></a>
+</p>
+
+<p align="center">
     <a href="https://zread.ai/shiunko/hiccl" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=for-the-badge&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
 </p>
 
@@ -50,6 +56,7 @@
 *   **🔀 Transducers Pipelined Rendering Middleware**: Integrates Clojure-like `Transducer` pipeline interceptors supporting DFS immutable tree transformations on Hiccup layouts. Ships with `LoadingTransducer` (automatic interactive spinner class injection) and `SanitizingTransducer` (audited regex key masking).
 *   **⏳ State Snapshot & Time-Travel Debugger**: Natively supports `Signal.with_history()` state snapshot logging, allowing step-by-step undo and redo. Features a premium out-of-the-box Time Travel visualization debug panel with robust multi-session isolation.
 *   **🧬 Datalog-lite Declarative Query Engine**: Modeled after Datomic's architecture with double-key EAVT, AVE, VAE indices. Features a dynamic Logic Unification query solver, heuristic Join Reordering optimization, GraphQL-like Pull API, lazy Entity graph navigation, and complete `as_of` historical snapshot querying.
+*   **🔀 Multiplexed Binary Stream Transport** (✅ Implemented): Leverages native WebSocket frame types for dual Text/Binary multiplexing — JSON protocol over Text frames, raw byte streams over Binary frames. Enables Web terminals (ttyd/gotty-style), online games, real-time collaboration, and other high-throughput bidirectional data scenarios. See [design document](docs/plans/stream-transport.md).
 *   **🎨 Built-in DaisyUI & TailwindCSS**: Ships with integrated premium dark-mode glassmorphic components (DaisyUI) and utility-first styling (TailwindCSS) to build stunning user interfaces out-of-the-box.
 *   **🌿 Client-Side Acceleration with Alpine.js**: Bypasses verbose custom scripts in favor of Alpine.js, permitting high-frequency client-side interactions (like 60fps local ticking clocks and real-time clock skew calculation) defined as native attributes.
 *   **📦 100% Offline & Air-Gapped Ready**: All critical static assets (`tailwind.js`, `daisyui.css`, `alpine.js`, `htmx.js`) are fully hosted locally in the `static/` folder. Build and deploy fast reactive applications in completely disconnected physical networks.
@@ -184,7 +191,7 @@ graph TD
 
 1.  **Hiccup UI Engine**: Translates nested Python arrays into HTML. Server actions annotated with `@server` are captured and serialized as network actions.
 2.  **Diff Engine**: Any state mutation triggers localized dirty-checking and re-renders only the changed node, calculating the minimum HTML delta to push to the client.
-3.  **Local State Transportation Layer**: Orchestrates low-latency updates via WebSockets and Server-Sent Events (SSE).
+3.  **Local State Transportation Layer**: Orchestrates low-latency updates via WebSockets and Server-Sent Events (SSE). WebSocket connections support parallel Text frames (JSON protocol) and Binary frames (multiplexed byte stream channels).
 
 ---
 

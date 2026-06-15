@@ -1,11 +1,12 @@
 Metadata-Version: 2.4
 Name: hiccl
-Version: 0.7.1
+Version: 0.8.0
 Summary: Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State
 Author: Hiccl Contributors
 License-Expression: MIT
-Project-URL: Documentation, https://github.com/shiunko/hiccl
-Project-URL: Repository, https://github.com/shiunko/hiccl
+Project-URL: Homepage, https://hiccl.dev/
+Project-URL: Documentation, https://github.com/lib-hiccl/hiccl
+Project-URL: Repository, https://github.com/lib-hiccl/hiccl
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 Requires-Dist: fastapi>=0.110.0
@@ -20,6 +21,12 @@ Requires-Dist: orjson>=3.9.0; extra == "full"
 
 <p align="center">
   <a href="README.md">简体中文</a> • <strong>English</strong>
+</p>
+
+<p align="center">
+  <a href="https://hiccl.dev/"><img src="https://img.shields.io/badge/Website-hiccl.dev-8b5cf6?style=for-the-badge&logo=svelte&logoColor=white" alt="Website"/></a>
+  <a href="https://github.com/lib-hiccl/hiccl"><img src="https://img.shields.io/badge/GitHub-lib--hiccl%2Fhiccl-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/></a>
+  <a href="https://pypi.org/project/hiccl/"><img src="https://img.shields.io/pypi/v/hiccl?style=for-the-badge&logo=pypi&logoColor=white&label=PyPI&color=3775A9" alt="PyPI"/></a>
 </p>
 
 <p align="center">
@@ -68,6 +75,7 @@ Requires-Dist: orjson>=3.9.0; extra == "full"
 *   **🔀 Transducers Pipelined Rendering Middleware**: Integrates Clojure-like `Transducer` pipeline interceptors supporting DFS immutable tree transformations on Hiccup layouts. Ships with `LoadingTransducer` (automatic interactive spinner class injection) and `SanitizingTransducer` (audited regex key masking).
 *   **⏳ State Snapshot & Time-Travel Debugger**: Natively supports `Signal.with_history()` state snapshot logging, allowing step-by-step undo and redo. Features a premium out-of-the-box Time Travel visualization debug panel with robust multi-session isolation.
 *   **🧬 Datalog-lite Declarative Query Engine**: Modeled after Datomic's architecture with double-key EAVT, AVE, VAE indices. Features a dynamic Logic Unification query solver, heuristic Join Reordering optimization, GraphQL-like Pull API, lazy Entity graph navigation, and complete `as_of` historical snapshot querying.
+*   **🔀 Multiplexed Binary Stream Transport** (✅ Implemented): Leverages native WebSocket frame types for dual Text/Binary multiplexing — JSON protocol over Text frames, raw byte streams over Binary frames. Enables Web terminals (ttyd/gotty-style), online games, real-time collaboration, and other high-throughput bidirectional data scenarios. See [design document](docs/plans/stream-transport.md).
 *   **🎨 Built-in DaisyUI & TailwindCSS**: Ships with integrated premium dark-mode glassmorphic components (DaisyUI) and utility-first styling (TailwindCSS) to build stunning user interfaces out-of-the-box.
 *   **🌿 Client-Side Acceleration with Alpine.js**: Bypasses verbose custom scripts in favor of Alpine.js, permitting high-frequency client-side interactions (like 60fps local ticking clocks and real-time clock skew calculation) defined as native attributes.
 *   **📦 100% Offline & Air-Gapped Ready**: All critical static assets (`tailwind.js`, `daisyui.css`, `alpine.js`, `htmx.js`) are fully hosted locally in the `static/` folder. Build and deploy fast reactive applications in completely disconnected physical networks.
@@ -202,7 +210,7 @@ graph TD
 
 1.  **Hiccup UI Engine**: Translates nested Python arrays into HTML. Server actions annotated with `@server` are captured and serialized as network actions.
 2.  **Diff Engine**: Any state mutation triggers localized dirty-checking and re-renders only the changed node, calculating the minimum HTML delta to push to the client.
-3.  **Local State Transportation Layer**: Orchestrates low-latency updates via WebSockets and Server-Sent Events (SSE).
+3.  **Local State Transportation Layer**: Orchestrates low-latency updates via WebSockets and Server-Sent Events (SSE). WebSocket connections support parallel Text frames (JSON protocol) and Binary frames (multiplexed byte stream channels).
 
 ---
 

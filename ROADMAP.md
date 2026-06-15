@@ -24,16 +24,16 @@
 | **v0.5.0** | Phase 4 | CSP Channel + Transducers 中间件 | Phase 0 | ✅ 已完成 |
 | **v0.6.0** | Phase 5a | `Signal.with_history()` 状态快照与时间旅行 | Phase 0 | ✅ 已完成 |
 | **v0.7.0** | Phase 5b | Datalog-lite 声明式查询引擎 | Phase 5a | ✅ 已完成 |
-| **v0.8.0** | Phase 6 | 流式传输扩展（多路复用字节流通道） | Phase 0 | 📋 设计中 |
+| **v0.8.0** | Phase 6 | 流式传输扩展（多路复用字节流通道） | Phase 0 | ✅ 已完成 |
 | **v1.0.0** | 生产就绪 | 全量文档 + API Reference + 性能基准 + 安全审计 | 全部 | 进行中 |
 
 > [!WARNING]
 > **v0.7.0 → v0.8.0 版本号跳跃说明**：原路线图中 v0.7.0 已分配给 Phase 5b（Datalog-lite）。新增的 Phase 6（流式传输扩展）是新提出的独立特性，作为增量开发阶段分配 v0.8.0，与现有版本序列连续。
 
 > [!TIP]
-> **所有核心与高阶开发阶段（Phase 0 至 Phase 5b）目前均已全部成功交付，并经过 210+ 单元测试验证！**
-> Phase 6 流式传输扩展已进入设计阶段，详见 [`docs/plans/stream-transport.md`](docs/plans/stream-transport.md)。
-> 框架目前全面步入 **v1.0.0 生产就绪** 阶段，后续工作重心将主要集中在 MkDocs 全量文档、规范的 API 参考手册、安全合规审计与高级特性性能调优，以及流式传输扩展的实现。
+> **所有核心与高阶开发阶段（Phase 0 至 Phase 6）目前均已全部成功交付，并经过 210+ 单元测试验证！**
+> Phase 6 流式传输扩展（框架核心 Phase 6.1–6.5）已实现，详见 [`docs/plans/stream-transport.md`](docs/plans/stream-transport.md)。应用层示例（Phase 6.6）待后续补充。
+> 框架目前全面步入 **v1.0.0 生产就绪** 阶段，后续工作重心将主要集中在 MkDocs 全量文档、规范的 API 参考手册、安全合规审计与高级特性性能调优。
 
 ### ⚠️ 版本兼容策略 (Breaking Change Policy)
 
@@ -126,9 +126,9 @@
                                    |  - 可作为永久的独立 repo      |
                                    +-------------+---------------+
                                                  |
-                                                 v  [设计中]
+                                                 v  [已完成]
                                     +-------------------------------+
-                                    |  Phase 6 (v0.8.0): 📋         |
+                                    |  Phase 6 (v0.8.0): ✅         |
                                     |  流式传输扩展                  |
                                     |  - 多路复用二进制帧通道        |
                                     |  - Stream/StreamRegistry API   |
@@ -745,7 +745,7 @@ results = app.db.query("""
 
 ---
 
-### 📅 Phase 6 —— 流式传输扩展与多路复用字节流通道 (v0.8.0) 📋
+### 📅 Phase 6 —— 流式传输扩展与多路复用字节流通道 (v0.8.0) ✅
 
 > [!NOTE]
 > **设计动机**：当前 WebSocket 传输层仅支持 JSON 消息（`send_json` / `receive_json`），限制了 Web 终端（ttyd/gotty 风格）、在线游戏、实时协作白板等需要高频双向二进制数据传输的场景。
@@ -801,14 +801,14 @@ results = app.db.query("""
 
 #### 实现阶段
 
-| 阶段 | 涉及文件 | 预估代码量 |
-|:---|:---|:---|
-| 6.1 | `transport/stream.py`（全新）— Stream + StreamRegistry | ~150 行 |
-| 6.2 | `transport/protocol.py` + `transport/websocket.py` | ~80 行改动 |
-| 6.3 | `session.py` + `component.py` + `app.py` | ~60 行改动 |
-| 6.4 | `static/hiccl.js` — 客户端流 API | ~100 行新增 |
-| 6.5 | `transport/sse.py` — SSE 降级 | ~40 行 |
-| 6.6 | `examples/webshell/app.py` — PTY + xterm.js 终端演示 | ~200 行改动 |
+| 阶段 | 涉及文件 | 预估代码量 | 状态 |
+|:---|:---|:---|:---|
+| 6.1 | `transport/stream.py`（全新）— Stream + StreamRegistry | ~150 行 | ✅ 已完成 |
+| 6.2 | `transport/protocol.py` + `transport/websocket.py` | ~80 行改动 | ✅ 已完成 |
+| 6.3 | `session.py` + `component.py` + `app.py` | ~60 行改动 | ✅ 已完成 |
+| 6.4 | `static/hiccl.js` — 客户端流 API | ~100 行新增 | ✅ 已完成 |
+| 6.5 | `transport/sse.py` — SSE 降级 | ~40 行 | ✅ 已完成 |
+| 6.6 | `examples/webshell/app.py` — PTY + xterm.js 终端演示 | ~200 行改动 | 📋 待实现 |
 
 ---
 

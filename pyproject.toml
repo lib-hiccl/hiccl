@@ -1,6 +1,6 @@
 [project]
 name = "hiccl"
-version = "0.7.1"
+version = "0.8.0"
 description = "Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State"
 readme = "README.en.md"
 requires-python = ">=3.11"
@@ -16,8 +16,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/shiunko/hiccl"
-Repository = "https://github.com/shiunko/hiccl"
+Homepage = "https://hiccl.dev/"
+Documentation = "https://github.com/lib-hiccl/hiccl"
+Repository = "https://github.com/lib-hiccl/hiccl"
 
 [project.scripts]
 hiccl = "hiccl.cli:main"

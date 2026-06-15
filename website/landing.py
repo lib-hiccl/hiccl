@@ -147,7 +147,7 @@ class LandingPage(Component):
                         _nav_link("#install", "安装", "Install"),
                         a(
                             {
-                                "href": "https://github.com/shiunko/hiccl",
+                                "href": "https://github.com/lib-hiccl/hiccl",
                                 "target": "_blank",
                                 "rel": "noopener",
                                 "class": "text-base-content/70 hover:text-primary transition-colors duration-200 text-sm font-medium inline-flex items-center gap-1",
@@ -219,7 +219,7 @@ class LandingPage(Component):
                     _nav_link("#install", "安装", "Install"),
                     a(
                         {
-                            "href": "https://github.com/shiunko/hiccl",
+                            "href": "https://github.com/lib-hiccl/hiccl",
                             "target": "_blank",
                             "rel": "noopener",
                             "class": "text-base-content/70 hover:text-primary transition-colors duration-200 text-sm font-medium",
@@ -355,7 +355,7 @@ class LandingPage(Component):
                     ),
                     a(
                         {
-                            "href": "https://github.com/shiunko/hiccl",
+                            "href": "https://github.com/lib-hiccl/hiccl",
                             "target": "_blank",
                             "rel": "noopener",
                             "class": "btn btn-outline btn-lg px-8 w-full sm:w-auto",
@@ -1224,7 +1224,7 @@ class LandingPage(Component):
                 # GitHub repo card
                 a(
                     {
-                        "href": "https://github.com/shiunko/hiccl",
+                        "href": "https://github.com/lib-hiccl/hiccl",
                         "target": "_blank",
                         "rel": "noopener",
                         "class": "block",

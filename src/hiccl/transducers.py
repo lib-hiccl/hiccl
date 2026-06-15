@@ -73,17 +73,14 @@ class LoadingTransducer(Transducer):
             has_attrs = len(node) > 1 and isinstance(node[1], dict)
             attrs = node[1] if has_attrs else {}
 
-            # Check if button has any action-oriented attribute
             is_interactive = any(
                 k.startswith("hx-") or k.startswith("on_") for k in attrs.keys()
             )
             if is_interactive:
                 new_attrs = {**attrs}
-                # Merge loading class
                 classes = new_attrs.get("class", "")
                 if self.loading_class not in classes:
                     new_attrs["class"] = f"{classes} {self.loading_class}".strip()
-                # Set loading indicator selector
                 if "hx-indicator" not in new_attrs:
                     new_attrs["hx-indicator"] = "#global-spinner"
 

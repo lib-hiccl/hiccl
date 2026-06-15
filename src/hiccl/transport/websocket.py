@@ -51,8 +51,12 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
         4. Incoming JSON actions → execute_action → auto-publish to EventBus.
         5. On disconnect: session is NOT immediately disposed (supports reconnect).
     """
+    import logging
+
     from hiccl.scheduler import RenderScheduler
     from hiccl.transport.protocol import NullTransport
+
+    logger = logging.getLogger("hiccl.transport.websocket")
 
     await websocket.accept()
 
@@ -69,18 +73,16 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
     transport = WSTransport(websocket)
     session.transport = transport
 
-    hiccl_state = getattr(websocket.app.state, "hiccl", {})
     config = hiccl_state.get("config") if isinstance(hiccl_state, dict) else None
     coalesce_ms = getattr(config, "scheduler_coalesce_ms", 0.0) if config else 0.0
     scheduler = RenderScheduler(coalesce_ms=coalesce_ms)
 
-    # Force a silent initial render of all mounted components that don't have active effects
-    # to register all reactive effects, subscription watches, and setup their dependency tracking
-    # while session.on_signal_change is STILL None. This prevents any render-phase signal modifications
-    # from triggering recursive dirty marking or infinite scheduler loops.
-    for comp in list(session._components.values()):
-        if not comp._effects:
-            session.renderer.render_component(comp)
+    try:
+        for comp in list(session._components.values()):
+            if not comp._effects:
+                session.renderer.render_component(comp)
+    except Exception as e:
+        logger.warning("Initial render failed for session %s: %s", session_id, e)
 
     def wrap_mark_dirty(comp_id: str) -> None:
         scheduler.mark_dirty(comp_id)
@@ -114,7 +116,7 @@ async def hiccl_websocket(websocket: WebSocket, session_id: str):
         if patches and transport.is_connected():
             await transport.push(patches)
 
-    scheduler.start(asyncio.get_event_loop(), render_fn, push_fn)
+    scheduler.start(asyncio.get_running_loop(), render_fn, push_fn)
 
     try:
         while transport.is_connected():

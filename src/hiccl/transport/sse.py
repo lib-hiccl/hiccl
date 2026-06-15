@@ -119,7 +119,7 @@ async def hiccl_sse(
     async def event_stream():
         import time
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         scheduler.start(loop, render_fn, push_fn)
         heartbeat_interval = 15  # seconds
         last_heartbeat = 0.0

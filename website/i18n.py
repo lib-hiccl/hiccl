@@ -418,3 +418,285 @@ def detect_lang(accept_language: str) -> str:
     if first.startswith("zh"):
         return "zh"
     return "en"
+
+
+# ---------------------------------------------------------------------------
+# Examples showcase data — bilingual titles, descriptions, tags & code
+# ---------------------------------------------------------------------------
+
+EXAMPLES: list[dict] = [
+    {
+        "id": "counter",
+        "route": "/examples/counter",
+        "icon": "🔢",
+        "tags": ["Signal", "@server", "Hiccup DSL"],
+        "title_zh": "响应式计数器",
+        "title_en": "Reactive Counter",
+        "desc_zh": (
+            "极简的响应式计数器组件。展示 signal 状态声明、@server 自动事件绑定"
+            "与 Hiccup 声明式渲染——零模板、零 API 胶水。"
+        ),
+        "desc_en": (
+            "Minimal reactive counter. Demonstrates signal state, "
+            "@server auto event binding, and Hiccup declarative rendering "
+            "— zero templates, zero API glue."
+        ),
+        "file": "counter/app.py",
+        "lines": "88",
+        "code": (
+            "class Counter(Component):\n"
+            "    def __init__(self, **kwargs):\n"
+            "        super().__init__(**kwargs)\n"
+            "        self.count = signal(0)\n"
+            "\n"
+            "    @server\n"
+            "    def increment(self, step: int = 1):\n"
+            "        self.count.set(self.count.get() + step)\n"
+            "\n"
+            "    def render(self):\n"
+            "        count = self.count.get()\n"
+            "        return div({'class': 'card ...'},\n"
+            "            h2({}, f'Count: {count}'),\n"
+            "            button({'on_click': self.increment(1)}, '+1'),\n"
+            "        )\n"
+            "\n"
+            "app = create_hiccl_app(HicclConfig(\n"
+            "    pages=menu(Counter),\n"
+            "))"
+        ),
+    },
+    {
+        "id": "two-clocks",
+        "route": "/examples/two-clocks",
+        "icon": "🕰️",
+        "tags": ["SSE/WS Push", "Alpine.js", "60fps"],
+        "title_zh": "双时钟实时推送",
+        "title_en": "Two Clocks — Real-Time Push",
+        "desc_zh": (
+            "服务端时间通过 SSE/WebSocket 高频推送，客户端时间由 Alpine.js 本地驱动。"
+            "展示服务端推送与客户端加速的无缝协作。"
+        ),
+        "desc_en": (
+            "Server time pushed via SSE/WebSocket, client time driven by Alpine.js locally. "
+            "Demonstrates seamless server-push and client-acceleration collaboration."
+        ),
+        "file": "two-clocks/app.py",
+        "lines": "184",
+        "code": (
+            "class TwoClocks(Component):\n"
+            "    def __init__(self, **kwargs):\n"
+            "        super().__init__(**kwargs)\n"
+            "        self._server_time = signal(time.time() * 1000)\n"
+            "\n"
+            "    def mount(self):\n"
+            "        self._task = asyncio.create_task(\n"
+            "            self._tick_loop()\n"
+            "        )\n"
+            "\n"
+            "    async def _tick_loop(self):\n"
+            "        while self._running:\n"
+            "            if self._session.transport.is_connected():\n"
+            "                self._server_time.set(time.time() * 1000)\n"
+            "            await asyncio.sleep(0.016)  # ~60fps"
+        ),
+    },
+    {
+        "id": "chat",
+        "route": "/examples/chat",
+        "icon": "💬",
+        "tags": ["EventBus", "Cross-Session", "on_submit"],
+        "title_zh": "多人实时聊天室",
+        "title_en": "Multi-User Chat Room",
+        "desc_zh": (
+            "多用户聊天室，通过 EventBus 跨会话广播实现所有用户实时同步。"
+            "展示 topics 声明、on_broadcast 回调与 on_submit 自动绑定。"
+        ),
+        "desc_en": (
+            "Multi-user chat with EventBus cross-session broadcasting for real-time sync. "
+            "Demonstrates topics declaration, on_broadcast callback, and on_submit auto-binding."
+        ),
+        "file": "chat/app.py",
+        "lines": "130",
+        "code": (
+            "class ChatRoom(Component):\n"
+            '    topics = ["chat-messages"]\n'
+            "\n"
+            "    @server\n"
+            '    def send_message(self, text: str, user: str = "Anonymous"):\n'
+            "        msg = {'user': user, 'text': text,\n"
+            "               'time': datetime.now().isoformat()}\n"
+            "        messages.append(msg)\n"
+            "        self.messages.set(list(messages))\n"
+            "\n"
+            "    def on_broadcast(self, topic: str):\n"
+            '        if topic == "chat-messages":\n'
+            "            self.messages.set(list(messages))"
+        ),
+    },
+    {
+        "id": "babashka",
+        "route": "/examples/babashka",
+        "icon": "🐚",
+        "tags": ["Shared State", "EventBus", "Subprocess"],
+        "title_zh": "Babashka 共享终端",
+        "title_en": "Babashka Shared Terminal",
+        "desc_zh": (
+            "交互式共享 REPL 终端。基于 Babashka (Clojure) 子进程，"
+            "多浏览器会话共享同一终端状态与输出流，类似 gotty 实时协同。"
+        ),
+        "desc_en": (
+            "Interactive shared REPL terminal powered by Babashka (Clojure) subprocess. "
+            "Multiple browser sessions share the same terminal state and output stream."
+        ),
+        "file": "babashka/app.py",
+        "lines": "391",
+        "code": (
+            "class BabashkaTerminal(Component):\n"
+            '    topics = ["bb-output"]\n'
+            "\n"
+            "    @server\n"
+            "    async def execute_code(self, code: str = ''):\n"
+            "        await shared_bb.write_input(code)\n"
+            "\n"
+            "    def on_broadcast(self, topic: str):\n"
+            '        if topic == "bb-output":\n'
+            "            self.output.set(\n"
+            "                shared_bb.output_buffer[self.cleared_at:]\n"
+            "            )"
+        ),
+    },
+    {
+        "id": "csp-crypto-trader",
+        "route": "/examples/csp-crypto-trader",
+        "icon": "⚡",
+        "tags": ["CSP Channel", "alts_", "Transducers"],
+        "title_zh": "CSP 并发加密交易终端",
+        "title_en": "CSP Crypto Trading Terminal",
+        "desc_zh": (
+            "实时加密货币交易模拟器。展示 CSP Channel 背压控制、alts_ 多路复用与超时、"
+            "@go 后台协程、LoadingTransducer 与 SanitizingTransducer。"
+        ),
+        "desc_en": (
+            "Real-time crypto trading simulator. Demonstrates CSP Channel backpressure, "
+            "alts_ multiplexing with timeout, @go coroutines, LoadingTransducer & SanitizingTransducer."
+        ),
+        "file": "csp-crypto-trader/app.py",
+        "lines": "589",
+        "code": (
+            "class CryptoTrader(Component):\n"
+            "    def __init__(self, **kwargs):\n"
+            "        super().__init__(**kwargs)\n"
+            "        self.trade_queue = Channel(maxsize=3)\n"
+            "        self.price_queue = Channel(maxsize=5)\n"
+            "\n"
+            "    def mount(self):\n"
+            "        @go\n"
+            "        async def stream_orchestrator():\n"
+            "            selected, val = await alts_([\n"
+            "                self.price_queue, timeout(1500)\n"
+            "            ])\n"
+            "            if selected is self.price_queue:\n"
+            "                self._btc_price.set(val)"
+        ),
+    },
+    {
+        "id": "time-travel",
+        "route": "/examples/time-travel",
+        "icon": "🧪",
+        "tags": ["HistorySignal", "Undo/Redo", "re-frame"],
+        "title_zh": "时间旅行调试沙盒",
+        "title_en": "Time-Travel Debug Sandbox",
+        "desc_zh": (
+            "Signal.with_history() 状态快照与可视化撤销/重做面板。"
+            "展示局部 HistorySignal 与全局 re-frame DB 自动升级后的时间旅行调试。"
+        ),
+        "desc_en": (
+            "Signal.with_history() state snapshots with visual undo/redo panel. "
+            "Demonstrates local HistorySignal and global re-frame DB auto-upgrade time-travel debugging."
+        ),
+        "file": "time_travel_demo.py",
+        "lines": "446",
+        "code": (
+            "class CounterBox(Component):\n"
+            "    def __init__(self, **kwargs):\n"
+            "        super().__init__(**kwargs)\n"
+            "        self.count = signal_with_history(\n"
+            "            10, max_snapshots=20\n"
+            "        )\n"
+            "\n"
+            "    @server\n"
+            "    def step_up(self):\n"
+            "        self.count.set(self.count.get() + 1)\n"
+            "\n"
+            "    @server\n"
+            "    def multiply_two(self):\n"
+            "        self.count.set(self.count.get() * 2)\n"
+            "    # Built-in TimeTravelPanel for undo/redo"
+        ),
+    },
+    {
+        "id": "datalog",
+        "route": "/examples/datalog",
+        "icon": "🧬",
+        "tags": ["Datalog", "Pull API", "Entity Graph"],
+        "title_zh": "Datalog 声明式查询引擎",
+        "title_en": "Datalog Declarative Query Engine",
+        "desc_zh": (
+            "Datomic 风格的声明式逻辑查询引擎。展示 EAVT 索引、Logic Unification 求解器、"
+            "GraphQL-like Pull API 与 as_of 历史回溯。"
+        ),
+        "desc_en": (
+            "Datomic-style declarative logic query engine. Demonstrates EAVT indices, "
+            "Logic Unification solver, GraphQL-like Pull API, and as_of historical queries."
+        ),
+        "file": "datalog_web_demo.py",
+        "lines": "1250",
+        "code": (
+            "# Flatten nested JSON into a queryable Database\n"
+            "db = Database.from_state({\n"
+            '    "name": "Volt Technologies",\n'
+            '    "employees": [\n'
+            '        {"id": "e1", "name": "Alice", "role": "Engineer"},\n'
+            "    ],\n"
+            "})\n"
+            "\n"
+            "# Datalog-style declarative logic queries\n"
+            "results = db.solve(\n"
+            '    [Var("name"), Var("role")],\n'
+            '    [("?emp", "name", "?name"),\n'
+            '     ("?emp", "role", "?role")],\n'
+            ")"
+        ),
+    },
+    {
+        "id": "premium-showcase",
+        "route": "/examples/premium-showcase",
+        "icon": "🛡️",
+        "tags": ["Spec", "Computed", "batch", "re-frame"],
+        "title_zh": "全维度特性大秀",
+        "title_en": "Full-Feature Premium Showcase",
+        "desc_zh": (
+            "Phase 0-4 全特性联合展示。包含 Signal/Computed/batch 反应式沙盒、"
+            "Spec 契约校验、通配符 EventBus、CSP 管道与 re-frame 纯函数组件。"
+        ),
+        "desc_en": (
+            "Phase 0-4 full-feature showcase. Includes Signal/Computed/batch sandbox, "
+            "Spec contract validation, wildcard EventBus, CSP channels, and re-frame components."
+        ),
+        "file": "premium_showcase.py",
+        "lines": "1126",
+        "code": (
+            "# Spec contracts guard @server method boundaries\n"
+            "UserSpec = spec.keys(req={\n"
+            '    "username": spec.string(min_len=3, max_len=20),\n'
+            '    "age": spec.integer(gte=18, lte=120),\n'
+            "})\n"
+            "\n"
+            '@server(spec={"args": {"data": UserSpec}})\n'
+            "def update_profile(self, data: dict) -> bool:\n"
+            "    self.profile.set(data)\n"
+            "    return True\n"
+            "# SpecValidationError -> explain_data introspection"
+        ),
+    },
+]

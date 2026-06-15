@@ -21,7 +21,7 @@ _re_frame_events_registry: dict[str, tuple[Callable, dict[str, Any] | None]] = {
 def reg_state(initial_state: dict[str, Any]) -> None:
     """Register the global initial state dict for re-frame."""
     global _re_frame_initial_state
-    _re_frame_initial_state = initial_state
+    _re_frame_initial_state = {**_re_frame_initial_state, **initial_state}
 
 
 def reg_sub(name: str) -> Callable[[Callable], Callable]:

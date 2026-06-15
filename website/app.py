@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from hiccl import ComponentRegistry, HicclConfig, create_hiccl_app
 from hiccl.app import _generate_font_tags
 
+from .examples import register_examples
 from .i18n import detect_lang
 from .landing import LandingPage
 
@@ -59,6 +60,20 @@ def website_layout(
 
     fonts_html = _generate_font_tags(config)
 
+    # Conditional navbar for live example pages
+    example_nav = ""
+    if request.url.path.startswith("/examples/"):
+        example_nav = (
+            '<header class="sticky top-0 z-50 backdrop-blur-xl bg-base-100/70 '
+            'border-b border-base-200/50">'
+            '<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-14 gap-3">'
+            '<a href="/#examples" class="btn btn-ghost btn-sm gap-2">'
+            "← <span>示例 / Examples</span></a>"
+            '<span class="text-base-content/20">|</span>'
+            '<a href="/" class="btn btn-ghost btn-sm text-xs px-2">🧪 Hiccl</a>'
+            "</div></header>"
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="{html_lang}" data-theme="{config.theme}">
 <head>
@@ -76,6 +91,10 @@ def website_layout(
   {config.head_extra}
 </head>
 <body class="min-h-screen bg-base-100">
+  <div id="global-spinner" class="htmx-indicator fixed inset-0 z-[9999] flex items-center justify-center bg-base-100/50 backdrop-blur-sm pointer-events-none opacity-0 transition-opacity">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  {example_nav}
   {comp_html}
 </body>
 </html>"""
@@ -89,13 +108,18 @@ def create_website_app() -> FastAPI:
     registry = ComponentRegistry()
     registry.register("landing-page", LandingPage)
 
+    # Register all live example components + get their routes
+    example_pages = register_examples(registry)
+
     config = HicclConfig(
         component_registry=registry,
-        # Route "/" → LandingPage
-        pages={"/": LandingPage},
+        # Route "/" → LandingPage, plus all /examples/* routes
+        pages={"/": LandingPage, **example_pages},
         # Custom full-width layout (no navbar, no card wrapper)
         layout=website_layout,
         show_navbar=False,
+        # Transport: HTTP + WebSocket + SSE for real-time examples
+        transport_modes={"http", "ws", "sse"},
         # Branding
         title="Hiccl — Full-Stack Reactive Python Web Framework",
         brand_name="Hiccl",
@@ -114,6 +138,12 @@ def create_website_app() -> FastAPI:
     )
 
     app = create_hiccl_app(config)
+
+    # Add LoadingTransducer globally (adds loading states to buttons during submits)
+    from hiccl import LoadingTransducer
+
+    renderer = app.state.hiccl["renderer"]
+    renderer.transducers.append(LoadingTransducer(loading_class="btn-loading"))
 
     # Mount Hiccl's built-in static files (CSS/JS from framework)
     import os

@@ -27,7 +27,7 @@ from hiccl.hiccup import (
     span,
 )
 
-from .i18n import COUNTER_CODE, EN, ZH
+from .i18n import COUNTER_CODE, EN, EXAMPLES, ZH
 
 
 def _nav_link(href: str, zh: str, en: str) -> list:
@@ -90,6 +90,7 @@ class LandingPage(Component):
                 self._hero_section(),
                 self._features_section(),
                 self._stack_section(),
+                self._examples_section(),
                 self._quickstart_section(),
                 self._install_section(),
                 self._footer(),
@@ -141,6 +142,7 @@ class LandingPage(Component):
                         },
                         _nav_link("#features", "特性", "Features"),
                         _nav_link("#stack", "技术栈", "Stack"),
+                        _nav_link("#examples", "示例", "Examples"),
                         _nav_link("#quickstart", "快速上手", "QuickStart"),
                         _nav_link("#install", "安装", "Install"),
                         a(
@@ -212,6 +214,7 @@ class LandingPage(Component):
                     },
                     _nav_link("#features", "特性", "Features"),
                     _nav_link("#stack", "技术栈", "Stack"),
+                    _nav_link("#examples", "示例", "Examples"),
                     _nav_link("#quickstart", "快速上手", "QuickStart"),
                     _nav_link("#install", "安装", "Install"),
                     a(
@@ -611,6 +614,193 @@ class LandingPage(Component):
                                 "x-cloak": "",
                             },
                             en_layer["desc"],
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+    # ── Examples ────────────────────────────────────────────────────
+
+    def _examples_section(self) -> list:
+        """Examples showcase section with code snippets."""
+        return section(
+            {"id": "examples", "class": "bg-base-200 py-16 sm:py-20"},
+            div(
+                {"class": "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"},
+                # Section header
+                div(
+                    {"class": "text-center mb-12"},
+                    h2(
+                        {
+                            "class": "text-3xl sm:text-4xl font-extrabold mb-4",
+                            "x-show": "lang === 'zh'",
+                            "x-cloak": "",
+                        },
+                        "🎮 演示示例",
+                    ),
+                    h2(
+                        {
+                            "class": "text-3xl sm:text-4xl font-extrabold mb-4",
+                            "x-show": "lang === 'en'",
+                            "x-cloak": "",
+                        },
+                        "🎮 Live Examples",
+                    ),
+                    p(
+                        {
+                            "class": "text-base-content/60 max-w-2xl mx-auto",
+                            "x-show": "lang === 'zh'",
+                            "x-cloak": "",
+                        },
+                        "从极简计数器到全维度特性大秀，探索 Hiccl 的每一种核心能力。每个示例都是可直接运行的完整应用。",
+                    ),
+                    p(
+                        {
+                            "class": "text-base-content/60 max-w-2xl mx-auto",
+                            "x-show": "lang === 'en'",
+                            "x-cloak": "",
+                        },
+                        "From a minimal counter to a full-featured showcase, explore every core capability of Hiccl. Each example is a complete, runnable application.",
+                    ),
+                ),
+                # Example cards grid
+                div(
+                    {"class": "grid grid-cols-1 lg:grid-cols-2 gap-6"},
+                    *[self._example_card(ex) for ex in EXAMPLES],
+                ),
+            ),
+        )
+
+    def _example_card(self, ex: dict) -> list:
+        """Render a single example card with bilingual text and code snippet."""
+        return div(
+            {
+                "class": (
+                    "card bg-base-100 border border-base-300 "
+                    "hover:border-emerald-400/30 hover:shadow-lg hover:shadow-emerald-400/5 "
+                    "transition-all duration-300 group overflow-hidden"
+                ),
+            },
+            div(
+                {"class": "card-body p-5 flex flex-col gap-3"},
+                # Header: icon + title + file info
+                div(
+                    {"class": "flex items-start gap-3"},
+                    span({"class": "text-2xl flex-shrink-0"}, ex["icon"]),
+                    div(
+                        {"class": "flex-1 min-w-0"},
+                        h3(
+                            {
+                                "class": "card-title text-base font-bold group-hover:text-emerald-400 transition-colors",
+                                "x-show": "lang === 'zh'",
+                                "x-cloak": "",
+                            },
+                            ex["title_zh"],
+                        ),
+                        h3(
+                            {
+                                "class": "card-title text-base font-bold group-hover:text-emerald-400 transition-colors",
+                                "x-show": "lang === 'en'",
+                                "x-cloak": "",
+                            },
+                            ex["title_en"],
+                        ),
+                        span(
+                            {"class": "text-xs text-base-content/40 font-mono"},
+                            f"examples/{ex['file']} · {ex['lines']} lines",
+                        ),
+                    ),
+                ),
+                # Description
+                p(
+                    {
+                        "class": "text-sm text-base-content/60 leading-relaxed",
+                        "x-show": "lang === 'zh'",
+                        "x-cloak": "",
+                    },
+                    ex["desc_zh"],
+                ),
+                p(
+                    {
+                        "class": "text-sm text-base-content/60 leading-relaxed",
+                        "x-show": "lang === 'en'",
+                        "x-cloak": "",
+                    },
+                    ex["desc_en"],
+                ),
+                # Tags
+                div(
+                    {"class": "flex flex-wrap gap-1.5"},
+                    *[
+                        span(
+                            {
+                                "class": "badge badge-xs badge-outline badge-primary/30 text-primary",
+                            },
+                            tag,
+                        )
+                        for tag in ex["tags"]
+                    ],
+                ),
+                # Try Live button
+                a(
+                    {
+                        "href": ex["route"],
+                        "class": "btn btn-sm btn-primary btn-outline gap-1 w-full",
+                    },
+                    span(
+                        {"x-show": "lang === 'zh'", "x-cloak": ""},
+                        "▶ 在线体验",
+                    ),
+                    span(
+                        {"x-show": "lang === 'en'", "x-cloak": ""},
+                        "▶ Try Live",
+                    ),
+                ),
+                # Code block
+                div(
+                    {
+                        "class": "bg-base-300 border border-base-300 rounded-xl overflow-hidden",
+                    },
+                    # Code header with dots
+                    div(
+                        {
+                            "class": "flex items-center justify-between px-4 py-2 bg-base-200/50 border-b border-base-300",
+                        },
+                        div(
+                            {"class": "flex items-center gap-1.5"},
+                            span({"class": "w-2.5 h-2.5 rounded-full bg-red-400"}),
+                            span({"class": "w-2.5 h-2.5 rounded-full bg-yellow-400"}),
+                            span({"class": "w-2.5 h-2.5 rounded-full bg-green-400"}),
+                        ),
+                        span(
+                            {"class": "text-xs text-base-content/40 font-mono"},
+                            ex["file"],
+                        ),
+                        span({"class": "w-10"}),
+                    ),
+                    # Code content
+                    pre(
+                        {
+                            "class": "p-4 overflow-x-auto text-xs leading-relaxed",
+                        },
+                        code(
+                            {
+                                "class": "font-mono text-base-content/70",
+                                "style": "white-space: pre;",
+                            },
+                            ex["code"],
+                        ),
+                    ),
+                ),
+                # Run command
+                div(
+                    {"class": "mockup-code bg-base-300/50 text-xs"},
+                    pre(
+                        {"class": "px-4 py-2"},
+                        code(
+                            {"class": "text-emerald-400"},
+                            f"$ uv run python examples/{ex['file']}",
                         ),
                     ),
                 ),

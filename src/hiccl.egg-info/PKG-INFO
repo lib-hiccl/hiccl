@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: hiccl
-Version: 0.8.0
+Version: 0.8.1
 Summary: Hiccl Reactive Web Framework — Hiccup DSL + Python Pickle-like State
 Author: Hiccl Contributors
 License-Expression: MIT

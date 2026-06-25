@@ -132,7 +132,7 @@ class LandingPage(Component):
                             {
                                 "class": "hidden sm:inline text-xs px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 font-mono",
                             },
-                            "v0.8.0",
+                            "v0.8.1",
                         ),
                     ),
                     # Desktop nav links
@@ -268,14 +268,14 @@ class LandingPage(Component):
                             "x-show": "lang === 'zh'",
                             "x-cloak": "",
                         },
-                        "🧪 v0.8.0 — 全栈反应式 Web 框架",
+                        "🧪 v0.8.1 — 全栈反应式 Web 框架",
                     ),
                     span(
                         {
                             "x-show": "lang === 'en'",
                             "x-cloak": "",
                         },
-                        "🧪 v0.8.0 — Full-Stack Reactive Web Framework",
+                        "🧪 v0.8.1 — Full-Stack Reactive Web Framework",
                     ),
                 ),
                 # Headline
@@ -370,7 +370,7 @@ class LandingPage(Component):
                         "x-show": "lang === 'zh'",
                         "x-cloak": "",
                     },
-                    "最新版本 v0.8.0 · MIT 开源 · Python ≥ 3.11",
+                    "最新版本 v0.8.1 · MIT 开源 · Python ≥ 3.11",
                 ),
                 p(
                     {
@@ -378,7 +378,7 @@ class LandingPage(Component):
                         "x-show": "lang === 'en'",
                         "x-cloak": "",
                     },
-                    "Latest v0.8.0 · MIT Open Source · Python ≥ 3.11",
+                    "Latest v0.8.1 · MIT Open Source · Python ≥ 3.11",
                 ),
             ),
             # Bottom gradient fade

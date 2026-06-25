@@ -349,5 +349,8 @@ class HiccupRenderer:
         if cached and cached[0] == total_version:
             return None
         rendered = self.render_component(component)
+        if cached and cached[1] == rendered:
+            self._cache[cache_key] = (total_version, rendered)
+            return None
         self._cache[cache_key] = (total_version, rendered)
         return rendered

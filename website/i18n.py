@@ -82,13 +82,13 @@ ZH: I18nDict = {
         "github": "GitHub",
     },
     "hero": {
-        "badge": "🧪 v0.8.0 — 全栈反应式 Web 框架",
+        "badge": "🧪 v0.8.1 — 全栈反应式 Web 框架",
         "title_line1": "融合 Clojure 声明式基因",
         "title_line2": "与 Pythonic 全栈反应式",
         "subtitle": "纯 Python 编写全栈应用。零构建、零 API 胶水、天生离线就绪。用嵌套列表表达 UI，框架自动完成 WebSocket 双向同步与最小化 DOM 补丁推送。",
         "cta_quickstart": "🚀 快速上手",
         "cta_github": "⭐ GitHub",
-        "version_label": "最新版本 v0.8.0 · MIT 开源",
+        "version_label": "最新版本 v0.8.1 · MIT 开源",
     },
     "features": {
         "title": "⚡️ 核心特性",
@@ -223,13 +223,13 @@ EN: I18nDict = {
         "github": "GitHub",
     },
     "hero": {
-        "badge": "🧪 v0.8.0 — Full-Stack Reactive Web Framework",
+        "badge": "🧪 v0.8.1 — Full-Stack Reactive Web Framework",
         "title_line1": "Clojure's Declarative Gene",
         "title_line2": "Meets Pythonic Full-Stack Reactivity",
         "subtitle": "Build full-stack apps in pure Python. Zero build, zero API glue, air-gapped ready. Express UI with nested lists — the framework handles WebSocket bidirectional sync and minimal DOM patch pushes automatically.",
         "cta_quickstart": "🚀 Quick Start",
         "cta_github": "⭐ GitHub",
-        "version_label": "Latest v0.8.0 · MIT Open Source",
+        "version_label": "Latest v0.8.1 · MIT Open Source",
     },
     "features": {
         "title": "⚡️ Key Features",
